@@ -1,3 +1,9 @@
+# Generated version file
+src/version.h
+
+# IDE files
+.idea/
+
 # Prerequisites
 *.d
 
