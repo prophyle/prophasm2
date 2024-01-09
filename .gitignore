@@ -1,3 +1,7 @@
+# Binaries
+prophasm
+prophasmtest
+
 # Generated version file
 src/version.h
 

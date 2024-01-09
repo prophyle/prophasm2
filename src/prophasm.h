@@ -45,7 +45,7 @@ std::pair<kmer_t, kmer_t> LeftExtension(kmer_t first, kh_S64_t *kMers, int k, in
 /// Find the next simplitig.
 /// Also remove the used k-mers from kMers.
 /// If complements are true, it is expected that kMers only contain one k-mer from a complementary pair.
-void NextSimplitig(kh_S64_t *kMers, kmer_t begin, std::ostream& of,  int k, bool complements, int simplitig_id) {
+void NextSimplitig(kh_S64_t *kMers, kmer_t begin, std::ostream& of,  int k, bool complements, int simplitigID) {
      // Maintain the first and last k-mer in the simplitig.
     kmer_t last = begin, first = begin;
     std::list<char> simplitig {NucleotideAtIndex(first, k, 0)};
@@ -82,7 +82,7 @@ void NextSimplitig(kh_S64_t *kMers, kmer_t begin, std::ostream& of,  int k, bool
         }
     }
     for (int i = 1; i < k; ++i) simplitig.emplace_back(NucleotideAtIndex(last, k, i));
-    of << ">" << simplitig_id << std::endl;
+    of << ">" << simplitigID << std::endl;
     of << std::string(simplitig.begin(), simplitig.end()) << std::endl;
 }
 
@@ -93,11 +93,11 @@ void NextSimplitig(kh_S64_t *kMers, kmer_t begin, std::ostream& of,  int k, bool
 /// Warning: this will destroy kMers.
 void ComputeSimplitigs(kh_S64_t *kMers, std::ostream& of, int k, bool complements) {
     size_t lastIndex = 0;
-    int simplitig_id = 0;
+    int simplitigID = 0;
     while(true) {
         kmer_t begin = nextKMer(kMers, lastIndex);
         // No more k-mers.
         if (begin == kmer_t(-1)) return;
-        NextSimplitig(kMers, begin, of,  k, complements, simplitig_id++);
+        NextSimplitig(kMers, begin, of,  k, complements, simplitigID++);
     }
 }
