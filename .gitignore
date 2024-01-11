@@ -1,6 +1,10 @@
 # Binaries
 prophasm
+prophasm2
 prophasmtest
+
+# Generated test files
+bin/
 
 # Generated version file
 src/version.h

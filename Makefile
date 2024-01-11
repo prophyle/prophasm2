@@ -1,23 +1,28 @@
-.PHONY: all clean test cpptest 
+.PHONY: all clean test cpptest verify
 
 CXX=         g++
 CXXFLAGS=    -g -Wall -Wno-unused-function -std=c++17 -O2
 LDFLAGS=     -lz 
 SRC=         src
+SCRIPTS=     scripts
+DATA=        data
 TESTS=       tests
 GTEST=       $(TESTS)/googletest/googletest
+PROG=        prophasm2
 
 
-all: prophasm
+all: $(PROG)
 
-test: cpptest
-
+test: cpptest verify
 
 cpptest: prophasmtest
 	./prophasmtest
 
+verify: $(PROG) $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
+	python $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
 
-prophasm: $(SRC)/main.cpp $(SRC)/$(wildcard *.cpp *.h *.hpp) src/version.h
+
+$(PROG): $(SRC)/main.cpp $(SRC)/$(wildcard *.cpp *.h *.hpp) src/version.h
 	./create-version.sh
 	$(CXX) $(CXXFLAGS) $(SRC)/main.cpp -o $@ $(LDFLAGS)
 
@@ -32,7 +37,7 @@ src/version.h: src/version
 	./create-version.sh
 
 clean:
-	rm -f prophasm
+	rm -f $(PROG)
 	rm -f prophasmtest
 	rm -r -f ./bin
 	rm -f gtest-all.o
