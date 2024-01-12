@@ -12,14 +12,11 @@
 #include "khash_utils.h"
 
 
-/// Find the right extension to the provided last k-mer from the kMers.
-/// This extension has k-d overlap with the given simplitig.
+/// Find the right extension to the provided last k-mer from the kMers by trying to append each of {A, C, G, T}.
 /// Return the extension - that is the d chars extending the simplitig - and the extending kMer.
-std::pair<kmer_t, kmer_t> RightExtension(kmer_t last, kh_S64_t *kMers, int k, int d, bool complements) {
-    // Try each of the {A, C, G, T}^d possible extensions of length d.
-    // TODO: remove kmercamel relicts.
-    for (kmer_t ext = 0; ext < (kmer_t(1) << (d << 1)); ++ext) {
-        kmer_t next = BitSuffix(last, k - d) << (d << 1) | ext;
+std::pair<kmer_t, kmer_t> RightExtension(kmer_t last, kh_S64_t *kMers, int k, bool complements) {
+    for (kmer_t ext = 0; ext < 4; ++ext) {
+        kmer_t next = (BitSuffix(last, k - 1) << 2) | ext;
         if (containsKMer(kMers, next, k, complements)) {
             return {ext, next};
         }
@@ -27,14 +24,11 @@ std::pair<kmer_t, kmer_t> RightExtension(kmer_t last, kh_S64_t *kMers, int k, in
     return {-1, -1};
 }
 
-/// Find the left extension to the provided first k-mer from the kMers.
-/// This extension has k-d overlap with the given simplitig.
+/// Find the left extension to the provided first k-mer from the kMers by trying to prepend each of {A, C, G, T}.
 /// Return the extension - that is the d chars extending the simplitig - and the extending kMer.
-std::pair<kmer_t, kmer_t> LeftExtension(kmer_t first, kh_S64_t *kMers, int k, int d, bool complements) {
-    // Try each of the {A, C, G, T}^d possible extensions of length d.
-    // TODO: remove kmercamel relicts.
-    for (kmer_t ext = 0; ext < (kmer_t(1) << (d << 1)); ++ext) {
-        kmer_t next = ext << ((k - d) << 1) | BitPrefix(first, k, k - d);
+std::pair<kmer_t, kmer_t> LeftExtension(kmer_t first, kh_S64_t *kMers, int k,  bool complements) {
+    for (kmer_t ext = 0; ext < 4; ++ext) {
+        kmer_t next = (ext << ((k - 1) << 1)) | BitPrefix(first, k, k - 1);
         if (containsKMer(kMers, next, k, complements)) {
             return {ext, next};
         }
@@ -48,40 +42,37 @@ std::pair<kmer_t, kmer_t> LeftExtension(kmer_t first, kh_S64_t *kMers, int k, in
 void NextSimplitig(kh_S64_t *kMers, kmer_t begin, std::ostream& of,  int k, bool complements, int simplitigID) {
      // Maintain the first and last k-mer in the simplitig.
     kmer_t last = begin, first = begin;
-    std::list<char> simplitig {NucleotideAtIndex(first, k, 0)};
+    std::string initialKMer = NumberToKMer(begin, k);
+    std::list<char> simplitig {initialKMer.begin(), initialKMer.end()};
     eraseKMer(kMers, last, k, complements);
-    // TODO: remove kmercamel relicts.
-    int d_l = 1, d_r = 1;
-    while (d_l <= 1 || d_r <= 1) {
-        if (d_r <= d_l) {
-            auto extension = RightExtension(last, kMers, k, 1, complements);
-            kmer_t ext = extension.first;
+    // TODO: print the right simplitig part directly after constructing the left part.
+    bool extendToRight = true;
+    bool extendToLeft = true;
+    while (extendToRight || extendToLeft) {
+        if (extendToRight) {
+            auto [ext, next] = RightExtension(last, kMers, k, complements);
             if (ext == kmer_t(-1)) {
                 // No right extension found.
-                ++d_r;
+                extendToRight = false;
             } else {
-                // Extend the generalized simplitig to the right.
-                eraseKMer(kMers, extension.second, k, complements);
-                for (int i = 0; i < d_r; ++i) simplitig.emplace_back(NucleotideAtIndex(extension.second, k, i));
-                last = extension.second;
-                d_r = 1;
+                // Extend the simplitig to the right.
+                eraseKMer(kMers, next, k, complements);
+                simplitig.emplace_back(letters[ext]);
+                last = next;
             }
         } else {
-            auto extension = LeftExtension(first, kMers, k, 1, complements);
-            kmer_t ext = extension.first;
+            auto [ext, next] =  LeftExtension(first, kMers, k, complements);
             if (ext == kmer_t(-1)) {
                 // No left extension found.
-                ++d_l;
+                extendToLeft = false;
             } else {
                 // Extend the simplitig to the left.
-                eraseKMer(kMers, extension.second, k, complements);
-                for (int i = d_l - 1; i >= 0; --i) simplitig.emplace_front(NucleotideAtIndex(extension.second, k, i));
-                first = extension.second;
-                d_l = 1;
+                eraseKMer(kMers, next, k, complements);
+                simplitig.emplace_front(letters[ext]);
+                first = next;
             }
         }
     }
-    for (int i = 1; i < k; ++i) simplitig.emplace_back(NucleotideAtIndex(last, k, i));
     of << ">" << simplitigID << std::endl;
     of << std::string(simplitig.begin(), simplitig.end()) << std::endl;
 }

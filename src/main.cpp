@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     bool complements = false;
     int opt;
     try {
-        while ((opt = getopt(argc, argv, "p:k:d:a:o:hcvm"))  != -1) {
+        while ((opt = getopt(argc, argv, "p:o:k:cvh"))  != -1) {
             switch(opt) {
                 case  'p':
                     path = optarg;

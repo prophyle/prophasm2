@@ -25,7 +25,7 @@ namespace {
             int ret;
             for (auto &&kMer : t.kMers) kh_put_S64(kMers, kMer, &ret);
 
-            auto got = RightExtension(t.last, kMers, t.k, 1, t.complements);
+            auto got = RightExtension(t.last, kMers, t.k, t.complements);
             auto gotExt = got.first;
             auto gotNext = got.second;
 
@@ -55,7 +55,7 @@ namespace {
             int ret;
             for (auto &&kMer : t.kMers) kh_put_S64(kMers, kMer, &ret);
 
-            auto got = LeftExtension(t.first, kMers, t.k, 1, t.complements);
+            auto got = LeftExtension(t.first, kMers, t.k, t.complements);
             auto gotExt = got.first;
             auto gotNext = got.second;
             EXPECT_EQ(t.wantNext, gotNext);
