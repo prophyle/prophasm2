@@ -1,4 +1,4 @@
-.PHONY: all clean test cpptest verify
+.PHONY: all clean test cpptest verify quick-verify
 
 CXX=         g++
 CXXFLAGS=    -g -Wall -Wno-unused-function -std=c++17 -O2
@@ -21,6 +21,8 @@ cpptest: prophasmtest
 verify: $(PROG) $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
 	python $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
 
+quick-verify: $(PROG) $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
+	python $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa --quick
 
 $(PROG): $(SRC)/main.cpp $(SRC)/$(wildcard *.cpp *.h *.hpp) src/version.h
 	./create-version.sh

@@ -68,9 +68,15 @@ inline kmer_t word_reverse_complement(kmer_t w) {
     return ((U)-1) - w;
 }
 
+/// Get the mask to mask k-mers.
+inline kmer_t MaskForK(int k) {
+    kmer_t mask = (((kmer_t) 1) << ((k << 1) - 1));
+    return mask | (mask - 1);
+}
+
 /// Compute the reverse complement of the given k-mer.
-kmer_t ReverseComplement(kmer_t kMer, int k) {
-    return (((kmer_t)word_reverse_complement(kMer)) >> (KMER_T_SIZE - (k << kmer_t(1)))) & ((kmer_t(1) << (k << kmer_t (1))) - kmer_t(1));
+inline kmer_t ReverseComplement(kmer_t kMer, int k) {
+    return (((kmer_t)word_reverse_complement(kMer)) >> (KMER_T_SIZE - (k << kmer_t(1)))) & MaskForK(k);
 }
 
 const char letters[4] {'A', 'C', 'G', 'T'};

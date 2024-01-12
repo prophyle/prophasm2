@@ -84,11 +84,12 @@ void NextSimplitig(kh_S64_t *kMers, kmer_t begin, std::ostream& of,  int k, bool
 /// Warning: this will destroy kMers.
 void ComputeSimplitigs(kh_S64_t *kMers, std::ostream& of, int k, bool complements) {
     size_t lastIndex = 0;
+    kmer_t begin = 0;
     int simplitigID = 0;
     while(true) {
-        kmer_t begin = nextKMer(kMers, lastIndex);
+        bool found = nextKMer(kMers, lastIndex, begin);
         // No more k-mers.
-        if (begin == kmer_t(-1)) return;
+        if (!found) return;
         NextSimplitig(kMers, begin, of,  k, complements, simplitigID++);
     }
 }

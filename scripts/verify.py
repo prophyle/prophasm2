@@ -61,13 +61,14 @@ def main():
 
     parser = argparse.ArgumentParser("check if ProphAsm2 outputs simplitigs which contain the same set of k-mers"
                                      "as the original sequence")
+    parser.add_argument("--quick", help="if set do not check for full range of k", action="store_true")
     parser.add_argument("path", help="path to the fasta file on which ProphAsm2 is verified")
     args = parser.parse_args()
 
     success = True
     print("Testing ProphAsm2 outputs valid simplitigs on file " + args.path)
     for complements in [True, False]:
-        for k in range(2, 31):
+        for k in range(2, 33, 3 if args.quick else 1):
             success &= verify_instance(args.path, k, complements)
         print("")
 

@@ -50,13 +50,15 @@ void eraseKMer(kh_S64_t *kMers, kmer_t kMer, int k, bool complements) {
 }
 
 /// Return the next k-mer in the k-mer set and update the index.
-kmer_t nextKMer(kh_S64_t *kMers, size_t &lastIndex) {
+kmer_t nextKMer(kh_S64_t *kMers, size_t &lastIndex, kmer_t &kMer) {
     for (size_t i = kh_begin(kMers) + lastIndex; i != kh_end(kMers); ++i, ++lastIndex) {
         if (!kh_exist(kMers, i)) continue;
-        return kh_key(kMers, i);
+        kMer = kh_key(kMers, i);
+        return true;
     }
     // No more k-mers.
-    return -1;
+    lastIndex = -1;
+    return false;
 }
 
 /// Construct a vector of the k-mer set in an arbitrary order.

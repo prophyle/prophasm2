@@ -8,10 +8,10 @@
 
 
 #ifdef LARGE_KMERS
-    constexpr int MAX_K = 63;
+    constexpr int MAX_K = 64;
     const std::string VARIANT = "(128bit k-mer variant)";
 #else
-    constexpr int MAX_K = 31;
+    constexpr int MAX_K = 32;
 #endif
 
 
