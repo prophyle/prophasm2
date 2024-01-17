@@ -1,3 +1,17 @@
+# Binaries
+prophasm
+prophasm2
+prophasmtest
+
+# Generated test files
+bin/
+
+# Generated version file
+src/version.h
+
+# IDE files
+.idea/
+
 # Prerequisites
 *.d
 
