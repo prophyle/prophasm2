@@ -57,7 +57,7 @@ void TestFile(FILE *fo, std::string fn) {
 }
 
 int main(int argc, char **argv) {
-    int32_t k=-1;
+    int32_t k = -1;
 
     std::string intersectionPath;
     std::vector<std::string> inPaths;
@@ -219,27 +219,48 @@ int main(int argc, char **argv) {
     }
     if (computeOutput) {
         for (size_t i = 0; i < setCount; i++) {
-            std::ofstream of(outPaths[i]);
+            std::ostream *of;
+            std::ofstream filestream;
+            if (outPaths[i] != "-") {
+                filestream = std::ofstream(outPaths[i]);
+                of = &filestream;
+            }
+            else {
+                of = &std::cout;
+            }
+
             if (fstats) {
                 fprintf(fstats,"%s\t%lu\n", outPaths[i].c_str(), outSizes[i]);
             }
-            int simplitigCount = ComputeSimplitigs(fullSets[i], of, k, complements);
+            int simplitigCount = ComputeSimplitigs(fullSets[i], *of, k, complements);
             if (verbose) {
                 std::cerr << "   assembly finished (" << simplitigCount << " contigs)" << std::endl;
             }
-            of.close();
+            if (filestream.is_open()) {
+                filestream.close();
+            }
         }
     }
     if (computeIntersection) {
-        std::ofstream of(intersectionPath);
+        std::ostream *of;
+        std::ofstream filestream;
+        if (intersectionPath != "-") {
+            filestream = std::ofstream(intersectionPath);
+            of = &filestream;
+        }
+        else {
+            of = &std::cout;
+        }
         if (fstats) {
             fprintf(fstats,"%s\t%lu\n", intersectionPath.c_str(), intersectionSize);
         }
-        int simplitigCount = ComputeSimplitigs(intersection, of, k, complements);
+        int simplitigCount = ComputeSimplitigs(intersection, *of, k, complements);
         if (verbose) {
             std::cerr << "   assembly finished (" << simplitigCount << " contigs)" << std::endl;
         }
-        of.close();
+        if (filestream.is_open()) {
+            filestream.close();
+        }
     }
     if (fstats){
         fclose(fstats);
