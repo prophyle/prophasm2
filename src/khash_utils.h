@@ -73,7 +73,7 @@ std::vector<kmer_t> kMersToVec(kh_S64_t *kMers) {
 }
 
 /// Compute the intersection of several k-mer sets.
-kh_S64_t *intersection(std::vector<kh_S64_t*> &kMerSets, int k, bool complements) {
+kh_S64_t *getIntersection(std::vector<kh_S64_t*> &kMerSets, int k, bool complements) {
     kh_S64_t* result = kh_init_S64();
     if (kMerSets.size() < 2) return result;
     kh_S64_t* smallestSet = kMerSets[0];

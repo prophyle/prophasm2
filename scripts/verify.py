@@ -9,11 +9,10 @@ def verify_instance(fasta_path: str, k: int, complements: bool) -> bool:
     """
     Check if running ProphAsm2 on given fasta file produces the same set of k-mers as the original one.
     """
-    with open("./bin/simplitigs.fa", "w") as k_mers:
-        args = ["./prophasm2", "-p", fasta_path, "-k", f"{k}"]
-        if complements:
-            args.append("-c")
-        subprocess.run(args, stdout=k_mers)
+    args = ["./prophasm2", "-i", fasta_path, "-k", f"{k}", "-o", "./bin/simplitigs.fa", "-S"]
+    if not complements:
+        args.append("-u")
+    subprocess.run(args)
     # in result; in original sequence; in result without complements; in original without complements; in merged file
     stats = [{}, {}, {}]
     runs = [
