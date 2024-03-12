@@ -82,14 +82,14 @@ void NextSimplitig(kh_S64_t *kMers, kmer_t begin, std::ostream& of,  int k, bool
 /// If complements are provided, treat k-mer and its complement as identical.
 /// If this is the case, k-mers are expected not to contain both k-mer and its complement.
 /// Warning: this will destroy kMers.
-void ComputeSimplitigs(kh_S64_t *kMers, std::ostream& of, int k, bool complements) {
+int ComputeSimplitigs(kh_S64_t *kMers, std::ostream& of, int k, bool complements) {
     size_t lastIndex = 0;
     kmer_t begin = 0;
     int simplitigID = 0;
     while(true) {
         bool found = nextKMer(kMers, lastIndex, begin);
         // No more k-mers.
-        if (!found) return;
+        if (!found) return simplitigID;
         NextSimplitig(kMers, begin, of,  k, complements, simplitigID++);
     }
 }

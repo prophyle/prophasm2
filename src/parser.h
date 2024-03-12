@@ -50,6 +50,7 @@ void ReadKMers(kh_S64_t *kMers, std::string &path, int k, bool complements) {
         }
         fasta.close();
     } else {
-        throw std::invalid_argument("couldn't open file " + path);
+        std::cerr << "Error: file '" << path << "' could not be open." << std::endl;
+        exit(1);
     }
 }

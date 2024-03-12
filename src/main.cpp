@@ -166,8 +166,14 @@ int main(int argc, char **argv) {
     std::vector<size_t> outSizes;
     for (size_t i = 0; i < setCount; i++) {
         fullSets[i] = kh_init_S64();
+        if (verbose) {
+            std::cerr << "Loading " << inPaths[i] << std::endl;
+        }
         ReadKMers(fullSets[i], inPaths[i], k, complements);
         inSizes.push_back(kh_size(fullSets[i]));
+        if (fstats != nullptr) {
+            fprintf(fstats,"%s\t%lu\n", inPaths[i].c_str(), inSizes[i]);
+        }
     }
 
     if (verbose) {
@@ -214,13 +220,25 @@ int main(int argc, char **argv) {
     if (computeOutput) {
         for (size_t i = 0; i < setCount; i++) {
             std::ofstream of(outPaths[i]);
-            ComputeSimplitigs(fullSets[i], of, k, complements);
+            if (fstats) {
+                fprintf(fstats,"%s\t%lu\n", outPaths[i].c_str(), outSizes[i]);
+            }
+            int simplitigCount = ComputeSimplitigs(fullSets[i], of, k, complements);
+            if (verbose) {
+                std::cerr << "   assembly finished (" << simplitigCount << " contigs)" << std::endl;
+            }
             of.close();
         }
     }
     if (computeIntersection) {
         std::ofstream of(intersectionPath);
-        ComputeSimplitigs(intersection, of, k, complements);
+        if (fstats) {
+            fprintf(fstats,"%s\t%lu\n", intersectionPath.c_str(), intersectionSize);
+        }
+        int simplitigCount = ComputeSimplitigs(intersection, of, k, complements);
+        if (verbose) {
+            std::cerr << "   assembly finished (" << simplitigCount << " contigs)" << std::endl;
+        }
         of.close();
     }
     if (fstats){
