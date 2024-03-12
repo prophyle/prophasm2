@@ -72,3 +72,39 @@ std::vector<kmer_t> kMersToVec(kh_S64_t *kMers) {
     return res;
 }
 
+/// Compute the intersection of several k-mer sets.
+kh_S64_t *intersection(std::vector<kh_S64_t*> &kMerSets, int k, bool complements) {
+    kh_S64_t* result = kh_init_S64();
+    if (kMerSets.size() < 2) return result;
+    kh_S64_t* smallestSet = kMerSets[0];
+    for (size_t i = 1; i < kMerSets.size(); ++i) {
+        if (kh_size(kMerSets[i]) < kh_size(smallestSet)) smallestSet = kMerSets[i];
+    }
+    for (auto i = kh_begin(smallestSet); i != kh_end(smallestSet); ++i) {
+        if (!kh_exist(smallestSet, i)) continue;
+        auto kMer = kh_key(smallestSet, i);
+        bool everywhere = true;
+        for (size_t i = 0; i < kMerSets.size(); ++i) if (kMerSets[i] != smallestSet) {
+            if (!containsKMer(kMerSets[i], kMer, k, complements)) {
+                everywhere = false;
+                break;
+            }
+        }
+        if (everywhere) {
+            int ret;
+            kh_put_S64(result, kMer, &ret);
+        }
+    }
+    return result;
+}
+
+/// Subtract the intersection from each k-mer set.
+void differenceInPlace(std::vector<kh_S64_t*> &kMerSets, kh_S64_t* intersection, int k, bool complements) {
+    for (auto i = kh_begin(intersection); i != kh_end(intersection); ++i) {
+        if (!kh_exist(intersection, i)) continue;
+        auto kMer = kh_key(intersection, i);
+        for (size_t i = 0; i < kMerSets.size(); ++i) {
+            eraseKMer(kMerSets[i], kMer, k, complements);
+        }
+    }
+}

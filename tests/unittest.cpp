@@ -1,5 +1,6 @@
 #include "kmers_unittest.h"
 #include "prophasm_unittest.h"
+#include "khash_utils_unittest.h"
 
 #include "gtest/gtest.h"
 
