@@ -16,8 +16,32 @@
 
 
 int Help() {
-    std::cerr << "ProphAsm2 version " << VERSION << std::endl;
-    std::cerr << "Here will be help" << std::endl;
+    std::cerr <<
+              "\n" <<
+              "Program:  prophasm2 (a greedy assembler for k-mer set compression)\n" <<
+              "Version:  " << VERSION << "\n" <<
+              "Contact:  Ondrej Sladky <ondra.sladky@gmail.com>\n" <<
+              "\n" <<
+              "Usage:    prophasm2 [options]\n" <<
+              "\n" <<
+              "Examples: prophasm2 -k 15 -i f1.fa -i f2.fa -x fx.fa\n" <<
+              "             - compute intersection of f1 and f2\n" <<
+              "          prophasm2 -k 15 -i f1.fa -i f2.fa -x fx.fa -o g1.fa -o g2.fa\n" <<
+              "             - compute intersection of f1 and f2, and subtract it from them\n" <<
+              "          prophasm2 -k 15 -i f1.fa -o g1.fa\n" <<
+              "             - re-assemble f1 to g1\n" <<
+              "\n" <<
+              "Command-line parameters:\n" <<
+              " -k INT   K-mer size.\n" <<
+              " -i FILE  Input FASTA file (can be used multiple times).\n" <<
+              " -o FILE  Output FASTA file (if used, must be used as many times as -i).\n" <<
+              " -x FILE  Compute intersection, subtract it, save it.\n" <<
+              " -s FILE  Output file with k-mer statistics.\n" <<
+              " -S       Silent mode.\n" <<
+              " -u       Do not consider k-mer and its reverse complement as equivalent.\n" <<
+              "\n" <<
+              "Note that '-' can be used for standard input/output. \n" <<
+              std::endl;
     return 1;
 }
 
@@ -51,7 +75,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     int c;
-    while ((c = getopt(argc, (char *const *)argv, "hSi:o:x:s:k:u")) >= 0) {
+    while ((c = getopt(argc, (char *const *)argv, "hSi:o:x:s:k:uv")) >= 0) {
         switch (c) {
             case 'h': {
                 return Help();
@@ -91,6 +115,10 @@ int main(int argc, char **argv) {
             case 'u': {
                 complements = false;
                 break;
+            }
+            case 'v': {
+                Version();
+                return 0;
             }
             case '?': {
                 std::cerr << "Unknown error" << std::endl;
