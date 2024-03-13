@@ -105,4 +105,24 @@ namespace {
             EXPECT_EQ(t.wantResult, gotResult);
         }
     }
+
+    TEST(KMers, CanonicalKMer) {
+        struct TestCase {
+            kmer_t input;
+            int k;
+            kmer_t wantResult;
+        };
+        std::vector<TestCase> tests = {
+                {0b1001LL, 2, 0b1001LL},
+                {0b101111LL, 3, 0b000001LL},
+                {0b11LL, 1, 0b00LL},
+                {0b11111111'01111111'11111111'11111111'11111111'11111111'11111111'11111110LL, 32, 0b010000'00000000'00000000'00000000'00000000'00000000'00000000'1000000000LL },
+        };
+
+        for (auto t: tests) {
+            kmer_t gotResult = CanonicalKMer(t.input, t.k);
+
+            EXPECT_EQ(t.wantResult, gotResult);
+        }
+    }
 }

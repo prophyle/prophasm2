@@ -78,9 +78,9 @@ namespace {
                 // {ACAA, AACA}
                 {{0b00010000,  0b00000100}, 4, false, 0,
                  ">0\nAACAA\n", {},},
-                // {ACAA, ATTT, TGTT} complements: {AAAT, TTGT, AACA}
-                {{0b00010000, 0b00111111, 0b11101111}, 4, true, 42,
-                 ">42\nAACAA\n", {0b00111111},},
+                // {ACAA, AAAT, AACA} complements: {TTGT, ATTT, TGTT}
+                {{0b00010000, 0b00000011, 0b00000100}, 4, true, 42,
+                 ">42\nAACAA\n", {0b00000011},},
         };
 
         for (auto &&t: tests) {

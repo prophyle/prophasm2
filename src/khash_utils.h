@@ -23,30 +23,32 @@
     KHASH_MAP_INIT_INT128(O64, size_t)
 #else
     // Use 64-bits integers for k-mers for faster operations and less memory usage.
-    KHASH_SET_INIT_INT64(S64)
+    KHASH_MAP_INIT_INT64(S64, char)
     KHASH_MAP_INIT_INT64(P64, size_t)
     KHASH_MAP_INIT_INT64(O64, size_t)
 #endif
 
 
-/// Determine whether the k-mer or its reverse complement is present.
+/// Determine whether the canonical k-mer is present.
 bool containsKMer(kh_S64_t *kMers, kmer_t kMer, int k, bool complements) {
-    bool ret = kh_get_S64(kMers, kMer) != kh_end(kMers);
-    if (complements) ret |= kh_get_S64(kMers, ReverseComplement(kMer, k )) != kh_end(kMers);
-    return ret;
+    if (complements) kMer = CanonicalKMer(kMer, k);
+    return kh_get_S64(kMers, kMer) != kh_end(kMers);
 }
 
-/// Remove the k-mer and its reverse complement.
+/// Remove the canonical k-mer from the set.
 void eraseKMer(kh_S64_t *kMers, kmer_t kMer, int k, bool complements) {
+    if (complements) kMer = CanonicalKMer(kMer, k);
     auto key = kh_get_S64(kMers, kMer);
     if (key != kh_end(kMers)) {
         kh_del_S64(kMers, key);
     }
-    if (complements) {
-        kmer_t reverseComplement = ReverseComplement(kMer, k);
-        key = kh_get_S64(kMers, reverseComplement);
-        if (key != kh_end(kMers)) kh_del_S64(kMers, key);
-    }
+}
+
+/// Insert the canonical k-mer into the set.
+void insertKMer(kh_S64_t *kMers, kmer_t kMer, int k, bool complements) {
+    if (complements) kMer = CanonicalKMer(kMer, k);
+    int ret;
+    kh_put_S64(kMers, kMer, &ret);
 }
 
 /// Return the next k-mer in the k-mer set and update the index.
@@ -91,8 +93,7 @@ kh_S64_t *getIntersection(std::vector<kh_S64_t*> &kMerSets, int k, bool compleme
             }
         }
         if (everywhere) {
-            int ret;
-            kh_put_S64(result, kMer, &ret);
+            insertKMer(result, kMer, k, complements);
         }
     }
     return result;
