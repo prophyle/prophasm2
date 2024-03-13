@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
         return Help();
     }
     // Flooring the number of threads to the number of sets.
-    if (setCount < threads) {
+    if (setCount < size_t(threads)) {
         threads = setCount;
         std::cerr << "Number of threads is greater than the number of input sets. Using " << threads << " threads instead." << std::endl;
     }
