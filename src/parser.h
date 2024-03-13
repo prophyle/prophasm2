@@ -3,6 +3,7 @@
 #include <unordered_set>
 #include <fstream>
 #include <algorithm>
+#include <vector>
 
 #include "kmers.h"
 #include "khash_utils.h"
@@ -59,4 +60,18 @@ void ReadKMers(kh_S64_t *kMers, std::string &path, int k, bool complements) {
         }
     }
     if (filestream.is_open()) filestream.close();
+}
+
+/// Data for parallel reading of k-mers.
+struct ReadKMersData {
+    std::vector<kh_S64_t*> kMers;
+    std::vector<std::string> paths;
+    int k;
+    bool complements;
+};
+
+/// Parallel wrapper for ReadKMers.
+void ReadKMersThread(void *arg, long i, int _) {
+    auto *data = (ReadKMersData *) arg;
+    ReadKMers(data->kMers[i], data->paths[i], data->k, data->complements);
 }

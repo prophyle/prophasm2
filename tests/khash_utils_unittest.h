@@ -63,47 +63,39 @@ namespace {
 
     TEST(KHASH_UTILS, DifferenceInPlace) {
         struct TestCase {
-            std::vector<std::vector<kmer_t>> kMers;
+            std::vector<kmer_t> kMers;
             std::vector<kmer_t> toRemove;
             int k;
             bool complements;
-            std::vector<std::vector<kmer_t>> wantResult;
+            std::vector<kmer_t> wantResult;
         };
 
         std::vector<TestCase> tests = {
-                // {{TCC, CTA, ACT, CCT}, {TCC, ACT, CCT}}
-                {{{0b110101, 0b011100, 0b000111, 0b010111}, {0b110101, 0b000111, 0b010111}},
+                // {TCC, CTA, ACT, CCT}
+                {{0b110101, 0b011100, 0b000111, 0b010111},
                  {0b110101}, 3, false,
-                 {{0b011100, 0b000111, 0b010111}, {0b000111, 0b010111}}},
-                // {{TCC, CTA, ACT, CCT}, {TCC, CTA, CCT}, {TCC, CTA, ACT, TCT}}
-                {{{0b110101, 0b011100, 0b000111, 0b010111},
-                  {0b110101, 0b011100, 0b010111}, {0b110101, 0b011100, 0b000111, 0b110111}},
+                 {0b011100, 0b000111, 0b010111}},
+                // {TCC, CTA, CCT}
+                {{0b110101, 0b011100, 0b010111},
                  {0b110101, 0b000111}, 3, false,
-                 {{0b011100, 0b010111}, {0b011100, 0b010111}, {0b110111, 0b011100}}},
-                // {{CC}, {GG}}
-                {{{0b0101}, {0b1010}}, {0b0101}, 2, true, {{}, {}}},
+                 {0b011100, 0b010111},},
+                // {GG}
+                { {0b1010}, {0b0101}, 2, true, {}},
         };
 
         for (auto t : tests) {
-            std::vector<kh_S64_t *> input (t.kMers.size());
-            for (size_t i = 0; i < t.kMers.size(); ++i) {
-                input[i] = kh_init_S64();
-                int ret;
-                for (auto &&kMer : t.kMers[i]) kh_put_S64(input[i], kMer, &ret);
-            }
-            auto intersection = kh_init_S64();
+            kh_S64_t * input = kh_init_S64();
             int ret;
+            for (auto &&kMer : t.kMers) kh_put_S64(input, kMer, &ret);
+            auto intersection = kh_init_S64();
             for (auto &&kMer : t.toRemove) kh_put_S64(intersection, kMer, &ret);
 
             differenceInPlace(input, intersection, t.k, t.complements);
 
-            std::vector<std::vector<kmer_t>> gotResult (t.kMers.size());
-            for (size_t i = 0; i < t.kMers.size(); ++i) {
-                gotResult[i] = kMersToVec(input[i]);
-                sort(t.wantResult[i].begin(), t.wantResult[i].end());
-                sort(gotResult[i].begin(), gotResult[i].end());
-                EXPECT_EQ(t.wantResult[i], gotResult[i]);
-            }
+            std::vector<kmer_t> gotResult = kMersToVec(input);
+            sort(t.wantResult.begin(), t.wantResult.end());
+            sort(gotResult.begin(), gotResult.end());
+            EXPECT_EQ(t.wantResult, gotResult);
         }
     }
 }
