@@ -38,6 +38,7 @@ int Help() {
               " -o FILE  Output FASTA file (if used, must be used as many times as -i).\n" <<
               " -x FILE  Compute intersection, subtract it, save it.\n" <<
               " -s FILE  Output file with k-mer statistics.\n" <<
+              " -t INT   Number of threads. (default 1)\n" <<
               " -S       Silent mode.\n" <<
               " -u       Do not consider k-mer and its reverse complement as equivalent.\n" <<
               "\n" <<
@@ -156,6 +157,12 @@ int main(int argc, char **argv) {
         std::cerr << "Number of threads must be at least 1." << std::endl;
         return Help();
     }
+    // Flooring the number of threads to the number of sets.
+    if (setCount < threads) {
+        threads = setCount;
+        std::cerr << "Number of threads is greater than the number of input sets. Using " << threads << " threads instead." << std::endl;
+    }
+
 
     if (fstats) {
         fprintf(fstats,"# cmd: %s",argv[0]);
