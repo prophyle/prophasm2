@@ -4,40 +4,31 @@ import sys
 import os
 import argparse
 
+def run_jellyfish_count(path: str, k: int, complements: bool, pass_m: int, result: str) -> dict:
+    args = ["jellyfish", "count", "-m", f"{k}", "-s", "100M", "-L", f"{pass_m}", "-o", f"./bin/{result}.jf", path]
+    if complements:
+        args.insert(2, "-C")
+    subprocess.run(args)
 
-def verify_instance(fasta_path: str, k: int, complements: bool, m: int) -> bool:
-    """
-    Check if running ProphAsm2 on given fasta file produces the same set of k-mers as the original one.
-    """
-    args = ["./prophasm2", "-i", fasta_path, "-k", f"{k}", "-o", "./bin/simplitigs.fa", "-S", "-m", f"{m}"]
+def run_prophasm2(fasta_path: str, k: int, complements: bool, m: int, result: str) -> str:
+    args = ["./prophasm2", "-i", fasta_path, "-k", f"{k}", "-o", f"./bin/{result}.fa", "-S", "-m", f"{m}"]
     if not complements:
         args.append("-u")
     subprocess.run(args)
-    # in result; in original sequence; in result without complements; in original without complements; in merged file
-    stats = [{}, {}, {}]
-    runs = [
-        (0, "./bin/simplitigs.fa", "simplitigs", 1),
-        (1, fasta_path, "original", m),
-    ]
-    for i, path, result, pass_m in runs:
-        args = ["jellyfish", "count", "-m", f"{k}", "-s", "100M", "-L", f"{pass_m}", "-o", f"./bin/{result}.jf", path]
-        if complements:
-            args.insert(2, "-C")
-        subprocess.run(args)
-        with open(f"./bin/{result}_stats.txt", "w") as f:
-            subprocess.run(["jellyfish", "stats", f"./bin/{result}.jf"], stdout=f)
-        with open(f"./bin/{result}_stats.txt", "r") as f:
-            for _ in range(4):
-                key, value = f.readline().split()
-                stats[i][key] = value
-    # Count k-mers on merged file.
-    subprocess.run(["jellyfish", "merge", "-o", f"./bin/merged.jf", "./bin/simplitigs.jf", "./bin/original.jf"])
-    with open(f"./bin/merged_stats.txt", "w") as f:
-        subprocess.run(["jellyfish", "stats", f"./bin/merged.jf"], stdout=f)
-    with open(f"./bin/merged_stats.txt", "r") as f:
+
+
+def read_jellyfish_stats(result: str) -> dict:
+    stats = {}
+    with open(f"./bin/{result}_stats.txt", "w") as f:
+        subprocess.run(["jellyfish", "stats", f"./bin/{result}.jf"], stdout=f)
+    with open(f"./bin/{result}_stats.txt", "r") as f:
         for _ in range(4):
             key, value = f.readline().split()
-            stats[2][key] = value
+            stats[key] = value
+    return stats
+
+
+def check_equal_kmers(stats: dict, k: int, m: int, complements: bool) -> bool:
     distinct_key = "Distinct:"
     total_key = "Total:"
     if stats[0][distinct_key] != stats[1][distinct_key] or stats[0][distinct_key] != stats[2][distinct_key]:
@@ -51,6 +42,26 @@ def verify_instance(fasta_path: str, k: int, complements: bool, m: int) -> bool:
         print(".", end="")
         sys.stdout.flush()
     return True
+
+
+def verify_instance(fasta_path: str, k: int, complements: bool, m: int) -> bool:
+    """
+    Check if running ProphAsm2 on given fasta file produces the same set of k-mers as the original one.
+    """
+    run_prophasm2(fasta_path, k, complements, m, "simplitigs")
+    # in result; in original sequence; in result without complements; in original without complements; in merged file
+    stats = [{}, {}, {}]
+    runs = [
+        (0, "./bin/simplitigs.fa", "simplitigs", 1),
+        (1, fasta_path, "original", m),
+    ]
+    for i, path, result, pass_m in runs:
+        run_jellyfish_count(path, k, complements, pass_m, result)
+        stats[i] = read_jellyfish_stats(result)
+    # Count k-mers on merged file.
+    subprocess.run(["jellyfish", "merge", "-o", f"./bin/merged.jf", "./bin/simplitigs.jf", "./bin/original.jf"])
+    stats[2] = read_jellyfish_stats("merged")
+    return check_equal_kmers(stats, k, m, complements)
 
 
 def main():
