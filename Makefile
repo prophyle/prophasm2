@@ -19,10 +19,10 @@ cpptest: prophasmtest
 	./prophasmtest
 
 verify: $(PROG) $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
-	python $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
+	python $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa --interpath $(DATA)/spyogenes.fa
 
 quick-verify: $(PROG) $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
-	python $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa --quick
+	python $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa --quick --interpath $(DATA)/spyogenes.fa
 
 $(PROG): $(SRC)/main.cpp $(SRC)/$(wildcard *.cpp *.h *.hpp) src/version.h
 	./create-version.sh
