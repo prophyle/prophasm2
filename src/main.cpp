@@ -26,12 +26,14 @@ int Help() {
               "\n" <<
               "Usage:    prophasm2 [options]\n" <<
               "\n" <<
-              "Examples: prophasm2 -k 15 -i f1.fa -i f2.fa -x fx.fa\n" <<
-              "             - compute intersection of f1 and f2\n" <<
+              "Examples: prophasm2 -k 15 -i f1.fa -i f2.fa -x fx.fa -t 2\n" <<
+              "             - compute intersection of f1 and f2 on two threads\n" <<
               "          prophasm2 -k 15 -i f1.fa -i f2.fa -x fx.fa -o g1.fa -o g2.fa\n" <<
               "             - compute intersection of f1 and f2, and subtract it from them\n" <<
               "          prophasm2 -k 15 -i f1.fa -o g1.fa\n" <<
               "             - re-assemble f1 to g1\n" <<
+              "          prophasm2 -k 15 -i f1.fa -o g1.fa -m 2\n" <<
+              "             - assemble k-mers appearing at least twice in f1 to g1\n" <<
               "\n" <<
               "Command-line parameters:\n" <<
               " -k INT   K-mer size.\n" <<
@@ -39,7 +41,8 @@ int Help() {
               " -o FILE  Output FASTA file (if used, must be used as many times as -i).\n" <<
               " -x FILE  Compute intersection, subtract it, save it.\n" <<
               " -s FILE  Output file with k-mer statistics.\n" <<
-              " -t INT   Number of threads. (default 1)\n" <<
+              " -t INT   Number of threads (default 1).\n" <<
+              " -m INT   Minimum abundance of k-mers to appear in the assembly (default 1).\n" <<
               " -S       Silent mode.\n" <<
               " -u       Do not consider k-mer and its reverse complement as equivalent.\n" <<
               "\n" <<
