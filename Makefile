@@ -2,7 +2,7 @@
 
 CXX=         g++
 CXXFLAGS=    -g -Wall -Wno-unused-function -std=c++17 -O2
-LDFLAGS=     -lz 
+LDFLAGS=     -lz -lpthread
 SRC=         src
 SCRIPTS=     scripts
 DATA=        data
@@ -26,7 +26,7 @@ quick-verify: $(PROG) $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
 
 $(PROG): $(SRC)/main.cpp $(SRC)/$(wildcard *.cpp *.h *.hpp) src/version.h
 	./create-version.sh
-	$(CXX) $(CXXFLAGS) $(SRC)/main.cpp -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(SRC)/main.cpp $(SRC)/kthread.c -o $@ $(LDFLAGS)
 
 
 prophasmtest: $(TESTS)/unittest.cpp gtest-all.o $(SRC)/$(wildcard *.cpp *.h *.hpp) $(TESTS)/$(wildcard *.cpp *.h *.hpp)

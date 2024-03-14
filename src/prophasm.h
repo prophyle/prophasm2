@@ -93,3 +93,20 @@ int ComputeSimplitigs(kh_S64_t *kMers, std::ostream& of, int k, bool complements
         NextSimplitig(kMers, begin, of,  k, complements, simplitigID++);
     }
 }
+
+/// Data for parallel computation of simplitigs.
+struct ComputeSimplitigsData {
+    std::vector<kh_S64_t *> kMers;
+    std::vector<std::ostream*> ofs;
+    int k;
+    bool complements;
+    std::vector<int> simplitigsCounts;
+};
+
+/// Parallel wrapper for ComputeSimplitigs.
+void ComputeSimplitigsThread(void *arg, long i, int _) {
+    auto *data = (ComputeSimplitigsData *) arg;
+    data->simplitigsCounts[i] = ComputeSimplitigs(data->kMers[i], *data->ofs[i], data->k, data->complements);
+}
+
+

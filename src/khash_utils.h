@@ -99,12 +99,24 @@ kh_S64_t *getIntersection(std::vector<kh_S64_t*> &kMerSets, int k, bool compleme
 }
 
 /// Subtract the intersection from each k-mer set.
-void differenceInPlace(std::vector<kh_S64_t*> &kMerSets, kh_S64_t* intersection, int k, bool complements) {
+void differenceInPlace(kh_S64_t* kMerSet, kh_S64_t* intersection, int k, bool complements) {
     for (auto i = kh_begin(intersection); i != kh_end(intersection); ++i) {
         if (!kh_exist(intersection, i)) continue;
         auto kMer = kh_key(intersection, i);
-        for (size_t i = 0; i < kMerSets.size(); ++i) {
-            eraseKMer(kMerSets[i], kMer, k, complements);
-        }
+        eraseKMer(kMerSet, kMer, k, complements);
     }
+}
+
+/// Data for parallel computation of set differences.
+struct DifferenceInPlaceData {
+    std::vector<kh_S64_t*> kMerSets;
+    kh_S64_t* intersection;
+    int k;
+    bool complements;
+};
+
+/// Parallel wrapper for differenceInPlace.
+void DifferenceInPlaceThread(void *arg, long i, int _) {
+    auto data = (DifferenceInPlaceData*)arg;
+    differenceInPlace(data->kMerSets[i], data->intersection, data->k, data->complements);
 }

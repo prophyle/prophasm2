@@ -5,6 +5,7 @@
 #include "version.h"
 #include "prophasm.h"
 #include "parser.h"
+#include "kthread.h"
 
 
 #ifdef LARGE_KMERS
@@ -37,6 +38,7 @@ int Help() {
               " -o FILE  Output FASTA file (if used, must be used as many times as -i).\n" <<
               " -x FILE  Compute intersection, subtract it, save it.\n" <<
               " -s FILE  Output file with k-mer statistics.\n" <<
+              " -t INT   Number of threads. (default 1)\n" <<
               " -S       Silent mode.\n" <<
               " -u       Do not consider k-mer and its reverse complement as equivalent.\n" <<
               "\n" <<
@@ -69,13 +71,14 @@ int main(int argc, char **argv) {
     bool computeOutput = false;
     bool verbose = true;
     bool complements = true;
+    int threads = 1;
 
     if (argc<2) {
         Help();
         return 1;
     }
     int c;
-    while ((c = getopt(argc, (char *const *)argv, "hSi:o:x:s:k:uv")) >= 0) {
+    while ((c = getopt(argc, (char *const *)argv, "hSi:o:x:s:k:uvt:")) >= 0) {
         switch (c) {
             case 'h': {
                 return Help();
@@ -112,6 +115,10 @@ int main(int argc, char **argv) {
                 k = atoi(optarg);
                 break;
             }
+            case 't': {
+                threads = atoi(optarg);
+                break;
+            }
             case 'u': {
                 complements = false;
                 break;
@@ -146,6 +153,16 @@ int main(int argc, char **argv) {
         std::cerr << "At least one input set must be provided." << std::endl;
         return Help();
     }
+    if (threads < 1) {
+        std::cerr << "Number of threads must be at least 1." << std::endl;
+        return Help();
+    }
+    // Flooring the number of threads to the number of sets.
+    if (setCount < size_t(threads)) {
+        threads = setCount;
+        std::cerr << "Number of threads is greater than the number of input sets. Using " << threads << " threads instead." << std::endl;
+    }
+
 
     if (fstats) {
         fprintf(fstats,"# cmd: %s",argv[0]);
@@ -162,15 +179,24 @@ int main(int argc, char **argv) {
         std::cerr << "=====================" << std::endl;
     }
     std::vector<kh_S64_t*> fullSets(setCount);
-    std::vector<size_t> inSizes;
+    std::vector<size_t> inSizes = std::vector<size_t>(setCount);
     std::vector<size_t> outSizes;
+
+
+
+
     for (size_t i = 0; i < setCount; i++) {
         fullSets[i] = kh_init_S64();
+    }
+
+    ReadKMersData data = {fullSets, inPaths, k, complements};
+    kt_for(threads, ReadKMersThread, (void*)&data, setCount);
+
+    for (size_t i = 0; i < setCount; i++) {
         if (verbose) {
-            std::cerr << "Loading " << inPaths[i] << std::endl;
+            std::cerr << "Loaded " << inPaths[i] << std::endl;
         }
-        ReadKMers(fullSets[i], inPaths[i], k, complements);
-        inSizes.push_back(kh_size(fullSets[i]));
+        inSizes[i] = kh_size(fullSets[i]);
         if (fstats != nullptr) {
             fprintf(fstats,"%s\t%lu\n", inPaths[i].c_str(), inSizes[i]);
         }
@@ -196,7 +222,8 @@ int main(int argc, char **argv) {
             if (verbose) {
                 std::cerr << "2.2) Removing this intersection from all k-mer sets" << std::endl;
             }
-            differenceInPlace(fullSets, intersection, k, complements);
+            DifferenceInPlaceData data = {fullSets, intersection, k, complements};
+            kt_for(threads, DifferenceInPlaceThread, (void*)&data, setCount);
         }
     }
     if (computeOutput) {
@@ -218,26 +245,29 @@ int main(int argc, char **argv) {
         std::cerr << "=============" << std::endl;
     }
     if (computeOutput) {
-        for (size_t i = 0; i < setCount; i++) {
-            std::ostream *of;
-            std::ofstream filestream;
-            if (outPaths[i] != "-") {
-                filestream = std::ofstream(outPaths[i]);
-                of = &filestream;
-            }
-            else {
-                of = &std::cout;
-            }
+        std::vector<std::ostream*> ofs (setCount);
+        std::vector<std::ofstream> filestreams (setCount);
 
+        for (size_t i = 0; i < setCount; i++) {
+            if (outPaths[i] != "-") {
+                filestreams[i] = std::ofstream(outPaths[i]);
+                ofs[i] = &filestreams[i];
+            } else {
+                ofs[i] = &std::cout;
+            }
             if (fstats) {
                 fprintf(fstats,"%s\t%lu\n", outPaths[i].c_str(), outSizes[i]);
             }
-            int simplitigCount = ComputeSimplitigs(fullSets[i], *of, k, complements);
+        }
+        ComputeSimplitigsData data = {fullSets, ofs, k, complements, std::vector<int>(setCount)};
+        kt_for(threads, ComputeSimplitigsThread, (void*)&data, setCount);
+
+        for (size_t i = 0; i < setCount; i++) {
             if (verbose) {
-                std::cerr << "   assembly finished (" << simplitigCount << " contigs)" << std::endl;
+                std::cerr << "   assembly finished (" << data.simplitigsCounts[i] << " contigs)" << std::endl;
             }
-            if (filestream.is_open()) {
-                filestream.close();
+            if (filestreams[i].is_open()) {
+                filestreams[i].close();
             }
         }
     }
