@@ -79,6 +79,12 @@ inline kmer_t ReverseComplement(kmer_t kMer, int k) {
     return (((kmer_t)word_reverse_complement(kMer)) >> (KMER_T_SIZE - (k << kmer_t(1)))) & MaskForK(k);
 }
 
+/// Return the lexicographically smaller of the k-mer and its reverse complement.
+inline kmer_t CanonicalKMer(kmer_t kMer, int k) {
+    kmer_t rev = ReverseComplement(kMer, k);
+    return kMer < rev ? kMer : rev;
+}
+
 const char letters[4] {'A', 'C', 'G', 'T'};
 
 /// Return the index-th nucleotide from the encoded k-mer.

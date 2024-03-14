@@ -53,10 +53,8 @@ void ReadKMers(kh_S64_t *kMers, std::string &path, int k, bool complements) {
         currentKMer &= mask;
         currentKMer |= data;
         if(beforeKMerEnd > 0) --beforeKMerEnd;
-        if (beforeKMerEnd == 0 && (!complements || kh_get_S64(kMers, ReverseComplement(currentKMer, k)) == kh_end(kMers))) {
-            int ret;
-            // If the k-mer was masked as present.
-            kh_put_S64(kMers, currentKMer, &ret);
+        if (beforeKMerEnd == 0) {
+            insertKMer(kMers, currentKMer, k, complements);
         }
     }
     if (filestream.is_open()) filestream.close();
