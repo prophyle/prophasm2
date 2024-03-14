@@ -5,23 +5,23 @@ import os
 import argparse
 
 
-def verify_instance(fasta_path: str, k: int, complements: bool) -> bool:
+def verify_instance(fasta_path: str, k: int, complements: bool, m: int) -> bool:
     """
     Check if running ProphAsm2 on given fasta file produces the same set of k-mers as the original one.
     """
-    args = ["./prophasm2", "-i", fasta_path, "-k", f"{k}", "-o", "./bin/simplitigs.fa", "-S"]
+    args = ["./prophasm2", "-i", fasta_path, "-k", f"{k}", "-o", "./bin/simplitigs.fa", "-S", "-m", f"{m}"]
     if not complements:
         args.append("-u")
     subprocess.run(args)
     # in result; in original sequence; in result without complements; in original without complements; in merged file
     stats = [{}, {}, {}]
     runs = [
-        (0, "./bin/simplitigs.fa", "simplitigs", complements),
-        (1, fasta_path, "original", complements),
+        (0, "./bin/simplitigs.fa", "simplitigs", 1),
+        (1, fasta_path, "original", m),
     ]
-    for i, path, result, pass_complements in runs:
-        args = ["jellyfish", "count", "-m", f"{k}", "-s", "100M", "-o", f"./bin/{result}.jf", path]
-        if pass_complements:
+    for i, path, result, pass_m in runs:
+        args = ["jellyfish", "count", "-m", f"{k}", "-s", "100M", "-L", f"{pass_m}", "-o", f"./bin/{result}.jf", path]
+        if complements:
             args.insert(2, "-C")
         subprocess.run(args)
         with open(f"./bin/{result}_stats.txt", "w") as f:
@@ -42,11 +42,11 @@ def verify_instance(fasta_path: str, k: int, complements: bool) -> bool:
     total_key = "Total:"
     if stats[0][distinct_key] != stats[1][distinct_key] or stats[0][distinct_key] != stats[2][distinct_key]:
         print("F")
-        print(f"Failed: k={k}: expected orginal_distinct_count={stats[1][distinct_key]}, result_distinct_count={stats[0][distinct_key]} and merged_distinct_count={stats[2][distinct_key]} to be equal.")
+        print(f"Failed: k={k}, m={m}: expected orginal_distinct_count={stats[1][distinct_key]}, result_distinct_count={stats[0][distinct_key]} and merged_distinct_count={stats[2][distinct_key]} to be equal.")
         return False
     elif complements and stats[0][distinct_key] != stats[0][total_key]:
         print("W")
-        print(f"Warning: k={k}: number of masked k-mers={stats[0][total_key]} is not minimal possible (minimum is {stats[0][distinct_key]}).")
+        print(f"Warning: k={k}, m={m}: number of masked k-mers={stats[0][total_key]} is not minimal possible (minimum is {stats[0][distinct_key]}).")
     else:
         print(".", end="")
         sys.stdout.flush()
@@ -67,9 +67,10 @@ def main():
     success = True
     print("Testing ProphAsm2 outputs valid simplitigs on file " + args.path)
     for complements in [True, False]:
-        for k in range(2, 33, 3 if args.quick else 1):
-            success &= verify_instance(args.path, k, complements)
-        print("")
+        for m in range(1, 4):
+            for k in range(2, 33, 3 if args.quick else 1):
+                success &= verify_instance(args.path, k, complements, m)
+            print("")
 
     # Print status.
     if not success:

@@ -6,6 +6,7 @@
 #include "prophasm.h"
 #include "parser.h"
 #include "kthread.h"
+#include "khash_utils.h"
 
 
 #ifdef LARGE_KMERS
@@ -78,7 +79,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     int c;
-    while ((c = getopt(argc, (char *const *)argv, "hSi:o:x:s:k:uvt:")) >= 0) {
+    while ((c = getopt(argc, (char *const *)argv, "hSi:o:x:s:k:uvt:m:")) >= 0) {
         switch (c) {
             case 'h': {
                 return Help();
@@ -117,6 +118,15 @@ int main(int argc, char **argv) {
             }
             case 't': {
                 threads = atoi(optarg);
+                break;
+            }
+            case 'm': {
+                int iarg = atoi(optarg);
+                if (iarg < 1 || iarg > 255) {
+                    std::cerr << "Minimum abundance must be between 1 and 255." << std::endl;
+                    return Help();
+                }
+                MINIMUM_ABUNDANCE = (byte) iarg;
                 break;
             }
             case 'u': {
