@@ -69,9 +69,12 @@ def verify_instance(fasta_path: str, k: int, complements: bool, m: int) -> bool:
 
 def verify_intersection(fasta_path: str, interpath: str, k: int, complements: bool, m: int) -> bool:
     run_prophasm2(fasta_path, k, complements, m, "simplitigs", interpath)
-    run_jellyfish_count(fasta_path, k, complements, m, "inter1")
-    run_jellyfish_count(interpath, k, complements, m, "inter2")
-    subprocess.run(["jellyfish", "merge", "-o", f"./bin/inter.jf", "./bin/inter1.jf", "./bin/inter2.jf"])
+    # This assumes that no k-mer appears twice.
+    run_prophasm2(fasta_path, k, complements, m, "inter1")
+    run_prophasm2(interpath, k, complements, m, "inter2")
+    run_jellyfish_count("./bin/inter1.fa", k, complements, m, "inter1")
+    run_jellyfish_count("./bin/inter2.fa", k, complements, m, "inter2")
+    subprocess.run(["jellyfish", "merge", "-L", "2", "-o", f"./bin/inter.jf", "./bin/inter1.jf", "./bin/inter2.jf"])
     stats = [{}, {}, {}]
     run_jellyfish_count("./bin/simplitigs.fa", k, complements, 1, "simplitigs")
     stats[0] = read_jellyfish_stats("simplitigs")
