@@ -18,60 +18,74 @@
 
 typedef unsigned char byte;
 
-#ifdef LARGE_KMERS
-    // Use 128-bit integers for k-mers to allow for larger k.
-    KHASH_SET_INIT_INT128(S64)
-    KHASH_MAP_INIT_INT128(P64, size_t)
-    KHASH_MAP_INIT_INT128(O64, size_t)
-#else
-    // Use 64-bits integers for k-mers for faster operations and less memory usage.
-    KHASH_MAP_INIT_INT64(S64, byte)
-    KHASH_MAP_INIT_INT64(P64, size_t)
-    KHASH_MAP_INIT_INT64(O64, size_t)
-#endif
+KHASH_MAP_INIT_INT128(S128, byte)
+KHASH_MAP_INIT_INT64(S64, byte)
 
 byte MINIMUM_ABUNDANCE = 1;
 
-/// Determine whether the canonical k-mer is present.
-bool containsKMer(kh_S64_t *kMers, kmer_t kMer, int k, bool complements) {
-    if (complements) kMer = CanonicalKMer(kMer, k);
-    bool contains_key = kh_get_S64(kMers, kMer) != kh_end(kMers);
-    if (MINIMUM_ABUNDANCE == 1) return contains_key;
-    if (!contains_key) return false;
-    return kh_val(kMers, kh_get_S64(kMers, kMer)) >= MINIMUM_ABUNDANCE;
-}
+// Forward definition for the macro.
+template <typename KHT>
+void differenceInPlace(KHT* kMerSet, KHT* intersection, int k, bool complements);
 
-/// Remove the canonical k-mer from the set.
-void eraseKMer(kh_S64_t *kMers, kmer_t kMer, int k, bool complements) {
-    if (complements) kMer = CanonicalKMer(kMer, k);
-    auto key = kh_get_S64(kMers, kMer);
-    if (key != kh_end(kMers)) {
-        kh_del_S64(kMers, key);
-    }
-}
+#define INIT_KHASH_UTILS(type)                                                                                      \
+                                                                                                                    \
+/* Data for parallel computation of set differences. */                                                             \
+struct DifferenceInPlaceData##type {                                                                                \
+    std::vector<kh_S##type##_t*> kMerSets;                                                                          \
+    kh_S##type##_t* intersection;                                                                                   \
+    int k;                                                                                                          \
+    bool complements;                                                                                               \
+};                                                                                                                  \
+                                                                                                                    \
+/* Determine whether the canonical k-mer is present.*/                                                              \
+bool containsKMer(kh_S##type##_t *kMers, kmer_t kMer, int k, bool complements) {                                    \
+    if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
+    bool contains_key = kh_get_S##type(kMers, kMer) != kh_end(kMers);                                               \
+    if (MINIMUM_ABUNDANCE == 1) return contains_key;                                                                \
+    if (!contains_key) return false;                                                                                \
+    return kh_val(kMers, kh_get_S##type(kMers, kMer)) >= MINIMUM_ABUNDANCE;                                         \
+}                                                                                                                   \
+                                                                                                                    \
+/* Remove the canonical k-mer from the set.*/                                                                       \
+void eraseKMer(kh_S##type##_t *kMers, kmer_t kMer, int k, bool complements) {                                       \
+    if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
+    auto key = kh_get_S##type(kMers, kMer);                                                                         \
+    if (key != kh_end(kMers)) {                                                                                     \
+        kh_del_S##type(kMers, key);                                                                                 \
+    }                                                                                                               \
+}                                                                                                                   \
+                                                                                                                    \
+/* Insert the canonical k-mer into the set. */                                                                      \
+void insertKMer(kh_S##type##_t *kMers, kmer_t kMer, int k, bool complements, bool force = false) {                  \
+    if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
+    int ret;                                                                                                        \
+    if (MINIMUM_ABUNDANCE == (byte)1) {                                                                             \
+        kh_put_S##type(kMers, kMer, &ret);                                                                          \
+    } else {                                                                                                        \
+        byte value = 0;                                                                                             \
+        khint_t key = kh_get_S##type(kMers, kMer);                                                                  \
+        if (key != kh_end(kMers)) {                                                                                 \
+            value = kh_val(kMers, key);                                                                             \
+        } else {                                                                                                    \
+            key = kh_put_S##type(kMers, kMer, &ret);                                                                \
+        }                                                                                                           \
+        if (force || value == (byte)255) kh_value(kMers, key) = (byte)255;                                          \
+        else kh_value(kMers, key) = value + 1;                                                                      \
+    }                                                                                                               \
+}                                                                                                                   \
+                                                                                                                    \
+/* Parallel wrapper for differenceInPlace. */                                                                       \
+void DifferenceInPlaceThread##type(void *arg, long i, int _) {                                                      \
+    auto data = (DifferenceInPlaceData##type*)arg;                                                                  \
+    differenceInPlace(data->kMerSets[i], data->intersection, data->k, data->complements);                           \
+}                                                                                                                   \
 
-/// Insert the canonical k-mer into the set.
-void insertKMer(kh_S64_t *kMers, kmer_t kMer, int k, bool complements, bool force = false) {
-    if (complements) kMer = CanonicalKMer(kMer, k);
-    int ret;
-    if (MINIMUM_ABUNDANCE == (byte)1) {
-        kh_put_S64(kMers, kMer, &ret);
-    } else {
-        byte value = 0;
-        khint_t key;
-        if (kh_get_S64(kMers, kMer) != kh_end(kMers)) {
-            key = kh_get_S64(kMers, kMer);
-            value = kh_val(kMers, key);
-        } else {
-            key = kh_put_S64(kMers, kMer, &ret);
-        }
-        if (force || value == (byte)255) kh_value(kMers, key) = (byte)255;
-        else kh_value(kMers, key) = value + 1;
-    }
-}
+INIT_KHASH_UTILS(64)
+INIT_KHASH_UTILS(128)
 
 /// Return the next k-mer in the k-mer set and update the index.
-kmer_t nextKMer(kh_S64_t *kMers, size_t &lastIndex, kmer_t &kMer) {
+template <typename KHT>
+kmer_t nextKMer(KHT *kMers, size_t &lastIndex, kmer_t &kMer) {
     for (size_t i = kh_begin(kMers) + lastIndex; i != kh_end(kMers); ++i, ++lastIndex) {
         if (!kh_exist(kMers, i)) continue;
         kMer = kh_key(kMers, i);
@@ -84,7 +98,8 @@ kmer_t nextKMer(kh_S64_t *kMers, size_t &lastIndex, kmer_t &kMer) {
 }
 
 /// Construct a vector of the k-mer set in an arbitrary order.
-std::vector<kmer_t> kMersToVec(kh_S64_t *kMers) {
+template <typename KHT>
+std::vector<kmer_t> kMersToVec(KHT *kMers) {
     std::vector<kmer_t> res(kh_size(kMers));
     size_t index = 0;
     for (auto i = kh_begin(kMers); i != kh_end(kMers); ++i) {
@@ -97,8 +112,8 @@ std::vector<kmer_t> kMersToVec(kh_S64_t *kMers) {
 }
 
 /// Compute the intersection of several k-mer sets.
-kh_S64_t *getIntersection(std::vector<kh_S64_t*> &kMerSets, int k, bool complements) {
-    kh_S64_t* result = kh_init_S64();
+template <typename KHT>
+KHT *getIntersection(KHT* result, std::vector<KHT*> &kMerSets, int k, bool complements) {
     if (kMerSets.size() < 2) return result;
     kh_S64_t* smallestSet = kMerSets[0];
     for (size_t i = 1; i < kMerSets.size(); ++i) {
@@ -123,7 +138,8 @@ kh_S64_t *getIntersection(std::vector<kh_S64_t*> &kMerSets, int k, bool compleme
 }
 
 /// Subtract the intersection from each k-mer set.
-void differenceInPlace(kh_S64_t* kMerSet, kh_S64_t* intersection, int k, bool complements) {
+template <typename KHT>
+void differenceInPlace(KHT* kMerSet, KHT* intersection, int k, bool complements) {
     for (auto i = kh_begin(intersection); i != kh_end(intersection); ++i) {
         if (!kh_exist(intersection, i)) continue;
         auto kMer = kh_key(intersection, i);
@@ -131,16 +147,4 @@ void differenceInPlace(kh_S64_t* kMerSet, kh_S64_t* intersection, int k, bool co
     }
 }
 
-/// Data for parallel computation of set differences.
-struct DifferenceInPlaceData {
-    std::vector<kh_S64_t*> kMerSets;
-    kh_S64_t* intersection;
-    int k;
-    bool complements;
-};
 
-/// Parallel wrapper for differenceInPlace.
-void DifferenceInPlaceThread(void *arg, long i, int _) {
-    auto data = (DifferenceInPlaceData*)arg;
-    differenceInPlace(data->kMerSets[i], data->intersection, data->k, data->complements);
-}

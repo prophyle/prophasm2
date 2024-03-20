@@ -9,12 +9,7 @@
 #include "khash_utils.h"
 
 
-#ifdef LARGE_KMERS
-    constexpr int MAX_K = 64;
-    const std::string VARIANT = "(128bit k-mer variant)";
-#else
-    constexpr int MAX_K = 32;
-#endif
+constexpr int MAX_K = 64;
 
 
 int Help() {
@@ -177,6 +172,7 @@ int main(int argc, char **argv) {
     }
 
 
+
     if (fstats) {
         fprintf(fstats,"# cmd: %s",argv[0]);
 
@@ -202,8 +198,8 @@ int main(int argc, char **argv) {
         fullSets[i] = kh_init_S64();
     }
 
-    ReadKMersData data = {fullSets, inPaths, k, complements};
-    kt_for(threads, ReadKMersThread, (void*)&data, setCount);
+    ReadKMersData64 data = {fullSets, inPaths, k, complements};
+    kt_for(threads, ReadKMersThread64, (void*)&data, setCount);
 
     for (size_t i = 0; i < setCount; i++) {
         if (verbose) {
@@ -220,13 +216,13 @@ int main(int argc, char **argv) {
         std::cerr << "2) Intersecting" << std::endl;
         std::cerr << "===============" << std::endl;
     }
-    kh_S64_t* intersection = nullptr;
+    kh_S64_t* intersection = kh_init_S64();
     size_t intersectionSize = 0;
     if (computeIntersection) {
         if (verbose) {
             std::cerr << "2.1) Computing intersection" << std::endl;
         }
-        intersection = getIntersection(fullSets, k, complements);
+        getIntersection(intersection, fullSets, k, complements);
         intersectionSize  = kh_size(intersection);
         if (verbose) {
             std::cerr << "   intersection size: " <<  intersectionSize << std::endl;
@@ -235,8 +231,8 @@ int main(int argc, char **argv) {
             if (verbose) {
                 std::cerr << "2.2) Removing this intersection from all k-mer sets" << std::endl;
             }
-            DifferenceInPlaceData data = {fullSets, intersection, k, complements};
-            kt_for(threads, DifferenceInPlaceThread, (void*)&data, setCount);
+            DifferenceInPlaceData64 data = {fullSets, intersection, k, complements};
+            kt_for(threads, DifferenceInPlaceThread64, (void*)&data, setCount);
         }
     }
     if (computeOutput) {
@@ -272,8 +268,8 @@ int main(int argc, char **argv) {
                 fprintf(fstats,"%s\t%lu\n", outPaths[i].c_str(), outSizes[i]);
             }
         }
-        ComputeSimplitigsData data = {fullSets, ofs, k, complements, std::vector<int>(setCount)};
-        kt_for(threads, ComputeSimplitigsThread, (void*)&data, setCount);
+        ComputeSimplitigsData64 data = {fullSets, ofs, k, complements, std::vector<int>(setCount)};
+        kt_for(threads, ComputeSimplitigsThread64, (void*)&data, setCount);
 
         for (size_t i = 0; i < setCount; i++) {
             if (verbose) {

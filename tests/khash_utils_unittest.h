@@ -52,7 +52,8 @@ namespace {
                 for (auto &&kMer : t.kMerSets[i]) kh_put_S64(input[i], kMer, &ret);
             }
 
-            auto gotResult = getIntersection(input, t.k, t.complements);
+            kh_S64_t * gotResult = kh_init_S64();
+            getIntersection(gotResult, input, t.k, t.complements);
             auto gotResultVec = kMersToVec(gotResult);
             sort(t.wantResult.begin(), t.wantResult.end());
             sort(gotResultVec.begin(), gotResultVec.end());

@@ -13,7 +13,8 @@
 /// Return unique k-mers in no particular order.
 /// If complements is set to true, the result contains only one of the complementary k-mers - it is not guaranteed which one.
 /// This runs in O(sequence length) expected time.
-void ReadKMers(kh_S64_t *kMers, std::string &path, int k, bool complements) {
+template <typename KHT>
+void ReadKMers(KHT *kMers, std::string &path, int k, bool complements) {
     std::ifstream filestream;
     std::istream *fasta;
     if (path == "-") {
@@ -60,16 +61,21 @@ void ReadKMers(kh_S64_t *kMers, std::string &path, int k, bool complements) {
     if (filestream.is_open()) filestream.close();
 }
 
-/// Data for parallel reading of k-mers.
-struct ReadKMersData {
-    std::vector<kh_S64_t*> kMers;
-    std::vector<std::string> paths;
-    int k;
-    bool complements;
-};
+#define INIT_PARSER(type)                                                                                 \
+                                                                                                          \
+/* Data for parallel reading of k-mers. */                                                                \
+struct ReadKMersData##type {                                                                              \
+    std::vector<kh_S##type##_t*> kMers;                                                                   \
+    std::vector<std::string> paths;                                                                       \
+    int k;                                                                                                \
+    bool complements;                                                                                     \
+};                                                                                                        \
+                                                                                                          \
+/* Parallel wrapper for ReadKMers. */                                                                     \
+void ReadKMersThread##type(void *arg, long i, int _) {                                                    \
+    auto *data = (ReadKMersData##type *) arg;                                                             \
+    ReadKMers(data->kMers[i], data->paths[i], data->k, data->complements);                                \
+}                                                                                                         \
 
-/// Parallel wrapper for ReadKMers.
-void ReadKMersThread(void *arg, long i, int _) {
-    auto *data = (ReadKMersData *) arg;
-    ReadKMers(data->kMers[i], data->paths[i], data->k, data->complements);
-}
+INIT_PARSER(64)
+INIT_PARSER(128)
