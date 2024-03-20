@@ -14,7 +14,7 @@
 
 /// Find the right extension to the provided last k-mer from the kMers by trying to append each of {A, C, G, T}.
 /// Return the extension - that is the d chars extending the simplitig - and the extending kMer.
-template <typename KHT>
+template <typename KHT, typename kmer_t>
 std::pair<kmer_t, kmer_t> RightExtension(kmer_t last, KHT *kMers, int k, bool complements) {
     for (kmer_t ext = 0; ext < 4; ++ext) {
         kmer_t next = (BitSuffix(last, k - 1) << 2) | ext;
@@ -27,7 +27,7 @@ std::pair<kmer_t, kmer_t> RightExtension(kmer_t last, KHT *kMers, int k, bool co
 
 /// Find the left extension to the provided first k-mer from the kMers by trying to prepend each of {A, C, G, T}.
 /// Return the extension - that is the d chars extending the simplitig - and the extending kMer.
-template <typename KHT>
+template <typename KHT, typename kmer_t>
 std::pair<kmer_t, kmer_t> LeftExtension(kmer_t first, KHT *kMers, int k,  bool complements) {
     for (kmer_t ext = 0; ext < 4; ++ext) {
         kmer_t next = (ext << ((k - 1) << 1)) | BitPrefix(first, k, k - 1);
@@ -41,7 +41,7 @@ std::pair<kmer_t, kmer_t> LeftExtension(kmer_t first, KHT *kMers, int k,  bool c
 /// Find the next simplitig.
 /// Also remove the used k-mers from kMers.
 /// If complements are true, it is expected that kMers only contain one k-mer from a complementary pair.
-template <typename KHT>
+template <typename KHT, typename kmer_t>
 void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool complements, int simplitigID) {
      // Maintain the first and last k-mer in the simplitig.
     kmer_t last = begin, first = begin;
@@ -91,7 +91,7 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
  */                                                                                                                    \
 int ComputeSimplitigs(kh_S##type##_t *kMers, std::ostream& of, int k, bool complements) {                              \
     size_t lastIndex = 0;                                                                                              \
-    kmer_t begin = 0;                                                                                                  \
+    kmer##type##_t begin = 0;                                                                                          \
     int simplitigID = 0;                                                                                               \
     while(true) {                                                                                                      \
         bool found = nextKMer(kMers, lastIndex, begin);                                                                \

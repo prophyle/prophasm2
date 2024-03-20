@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
         std::cerr << "1) Loading references" << std::endl;
         std::cerr << "=====================" << std::endl;
     }
-    std::vector<kh_S64_t*> fullSets(setCount);
+    std::vector<kh_S128_t*> fullSets(setCount);
     std::vector<size_t> inSizes = std::vector<size_t>(setCount);
     std::vector<size_t> outSizes;
 
@@ -195,11 +195,11 @@ int main(int argc, char **argv) {
 
 
     for (size_t i = 0; i < setCount; i++) {
-        fullSets[i] = kh_init_S64();
+        fullSets[i] = kh_init_S128();
     }
 
-    ReadKMersData64 data = {fullSets, inPaths, k, complements};
-    kt_for(threads, ReadKMersThread64, (void*)&data, setCount);
+    ReadKMersData128 data = {fullSets, inPaths, k, complements};
+    kt_for(threads, ReadKMersThread128, (void*)&data, setCount);
 
     for (size_t i = 0; i < setCount; i++) {
         if (verbose) {
@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
         std::cerr << "2) Intersecting" << std::endl;
         std::cerr << "===============" << std::endl;
     }
-    kh_S64_t* intersection = kh_init_S64();
+    kh_S128_t* intersection = kh_init_S128();
     size_t intersectionSize = 0;
     if (computeIntersection) {
         if (verbose) {
@@ -231,8 +231,8 @@ int main(int argc, char **argv) {
             if (verbose) {
                 std::cerr << "2.2) Removing this intersection from all k-mer sets" << std::endl;
             }
-            DifferenceInPlaceData64 data = {fullSets, intersection, k, complements};
-            kt_for(threads, DifferenceInPlaceThread64, (void*)&data, setCount);
+            DifferenceInPlaceData128 data = {fullSets, intersection, k, complements};
+            kt_for(threads, DifferenceInPlaceThread128, (void*)&data, setCount);
         }
     }
     if (computeOutput) {
@@ -268,8 +268,8 @@ int main(int argc, char **argv) {
                 fprintf(fstats,"%s\t%lu\n", outPaths[i].c_str(), outSizes[i]);
             }
         }
-        ComputeSimplitigsData64 data = {fullSets, ofs, k, complements, std::vector<int>(setCount)};
-        kt_for(threads, ComputeSimplitigsThread64, (void*)&data, setCount);
+        ComputeSimplitigsData128 data = {fullSets, ofs, k, complements, std::vector<int>(setCount)};
+        kt_for(threads, ComputeSimplitigsThread128, (void*)&data, setCount);
 
         for (size_t i = 0; i < setCount; i++) {
             if (verbose) {
