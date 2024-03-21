@@ -16,20 +16,12 @@ typedef unsigned char byte;
 #define KHASH_MAP_INIT_INT128(name, khval_t)								\
 	KHASH_INIT(name, __uint128_t, khval_t, 1, kh_int128_hash_func, kh_int128_hash_equal)
 
-#define KHASH_SET_INIT_INT128(name)										\
-	KHASH_INIT(name, __uint128_t, byte, 0, kh_int128_hash_func, kh_int256_hash_equal)
-
 #define KHASH_MAP_INIT_INT256(name, khval_t)								\
 	KHASH_INIT(name, uint256_t, khval_t, 1, kh_int256_hash_func, kh_int128_hash_equal)
-
-#define KHASH_SET_INIT_INT256(name)										\
-	KHASH_INIT(name, uint256_t, byte, 0, kh_int256_hash_func, kh_int256_hash_equal)
 
 KHASH_MAP_INIT_INT256(S256M, byte)
 KHASH_MAP_INIT_INT128(S128M, byte)
 KHASH_MAP_INIT_INT64(S64M, byte)
-KHASH_SET_INIT_INT256(S256S)
-KHASH_SET_INIT_INT128(S128S)
 KHASH_SET_INIT_INT64(S64S)
 
 byte MINIMUM_ABUNDANCE = 1;
@@ -93,9 +85,7 @@ void DifferenceInPlaceThread##variant(void *arg, long i, int _) {               
 
 INIT_KHASH_UTILS(64, 64S)
 INIT_KHASH_UTILS(64, 64M)
-INIT_KHASH_UTILS(128, 128S)
 INIT_KHASH_UTILS(128, 128M)
-INIT_KHASH_UTILS(256, 256S)
 INIT_KHASH_UTILS(256, 256M)
 
 /// Return the next k-mer in the k-mer set and update the index.

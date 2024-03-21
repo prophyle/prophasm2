@@ -198,9 +198,7 @@ int run##version(int32_t k,                                                     
 
 INIT_RUN(64, 64S)
 INIT_RUN(64, 64M)
-INIT_RUN(128, 128S)
 INIT_RUN(128, 128M)
-INIT_RUN(256, 256S)
 INIT_RUN(256, 256M)
 
 int main(int argc, char **argv) {
@@ -332,16 +330,8 @@ int main(int argc, char **argv) {
             return run64M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
         }
     } else if (k <= 64) {
-        if (MINIMUM_ABUNDANCE == (byte)1) {
-            return run128S(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
-        } else {
-            return run128M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
-        }
+        return run128M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
     } else {
-        if (MINIMUM_ABUNDANCE == (byte)1) {
-            return run256S(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
-        } else {
-            return run256M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
-        }
+        return run256M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
     }
 }

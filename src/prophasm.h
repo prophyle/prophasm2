@@ -119,7 +119,5 @@ void ComputeSimplitigsThread##variant(void *arg, long i, int _) {               
 
 INIT_PROPHASM(64, 64S)
 INIT_PROPHASM(64, 64M)
-INIT_PROPHASM(128, 128S)
 INIT_PROPHASM(128, 128M)
-INIT_PROPHASM(256, 256S)
 INIT_PROPHASM(256, 256M)

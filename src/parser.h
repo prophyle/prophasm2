@@ -80,7 +80,5 @@ void ReadKMersThread##variant(void *arg, long i, int _) {                       
 
 INIT_PARSER(64, 64S)
 INIT_PARSER(64, 64M)
-INIT_PARSER(128, 128S)
 INIT_PARSER(128, 128M)
-INIT_PARSER(256, 256S)
 INIT_PARSER(256, 256M)
