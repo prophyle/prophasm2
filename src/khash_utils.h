@@ -98,8 +98,8 @@ kmer_t nextKMer(KHT *kMers, size_t &lastIndex, kmer_t &kMer) {
 }
 
 /// Construct a vector of the k-mer set in an arbitrary order. Only for testing.
-void kMersToVec(kh_S64_t *kMers, std::vector<kmer64_t> &result) {
-    result = std::vector<kmer64_t>(kh_size(kMers));
+std::vector<kmer64_t> kMersToVec(kh_S64_t *kMers) {
+    std::vector<kmer64_t> result(kh_size(kMers));
     size_t index = 0;
     for (auto i = kh_begin(kMers); i != kh_end(kMers); ++i) {
         if (!kh_exist(kMers, i)) continue;
@@ -107,6 +107,7 @@ void kMersToVec(kh_S64_t *kMers, std::vector<kmer64_t> &result) {
         result[index++] = kh_key(kMers, i);
     }
     result.resize(index);
+    return result;
 }
 
 /// Compute the intersection of several k-mer sets.
