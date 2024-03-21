@@ -1,4 +1,6 @@
-#define __LITTLE_ENDIAN__
+#ifndef __LITTLE_ENDIAN__
+  #define __LITTLE_ENDIAN__ 1
+#endif
 #include "uint256_t.build"
 #include <vector>
 #include <cstring>

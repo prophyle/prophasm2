@@ -6,6 +6,8 @@
 typedef __uint128_t uint128_t;
 const uint128_t uint128_0(0);
 const uint128_t uint128_1(1);
-#define __LITTLE_ENDIAN__
+#ifndef __LITTLE_ENDIAN__
+#define __LITTLE_ENDIAN__ 1
+#endif
 #include "uint256_t.include"
 #endif
