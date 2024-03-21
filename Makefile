@@ -25,7 +25,7 @@ verify: $(PROG) $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
 quick-verify: $(PROG) $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
 	python $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa --quick --interpath $(DATA)/spyogenes.fa
 
-$(PROG): $(SRC)/main.cpp $(SRC)/$(wildcard *.cpp *.h *.hpp) src/version.h
+$(PROG): $(SRC)/main.cpp $(SRC)/$(wildcard *.cpp *.h *.hpp) src/version.h $(wildcard $(UINT256)/*.cpp $(UINT256)/*.h $(UINT256)/*.include)
 	./create-version.sh
 	$(CXX) $(CXXFLAGS) $(SRC)/main.cpp $(UINT256)/uint256_t.cpp $(SRC)/kthread.c -o $@ $(LDFLAGS)
 

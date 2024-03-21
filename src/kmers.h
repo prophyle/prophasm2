@@ -114,7 +114,7 @@ const char letters[4] {'A', 'C', 'G', 'T'};
 /// Return the index-th nucleotide from the encoded k-mer.
 template <typename kmer_t>
 inline char NucleotideAtIndex(kmer_t encoded, int k, int index) {
-    return letters[(unsigned long)(encoded >> ((k - index - kmer_t(1)) << kmer_t(1))) & kmer_t(3)];
+    return letters[(uint32_t)(encoded >> ((k - index - kmer_t(1)) << kmer_t(1))) & kmer_t(3)];
 }
 
 /// Convert the encoded KMer representation to string.
@@ -123,7 +123,7 @@ std::string NumberToKMer(kmer_t encoded, int length) {
     std::string ret(length, 'N');
     for (int i = 0; i < length; ++i) {
         // The last two bits correspond to one nucleotide.
-        ret[length - i -1] = letters[(unsigned long)encoded & 3];
+        ret[length - i -1] = letters[(uint32_t)(encoded & 3)];
         // Move to the next letter.
         encoded >>= 2;
     }

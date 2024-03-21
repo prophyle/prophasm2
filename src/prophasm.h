@@ -60,7 +60,7 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
             } else {
                 // Extend the simplitig to the right.
                 eraseKMer(kMers, next, k, complements);
-                simplitig.emplace_back(letters[(unsigned int)ext]);
+                simplitig.emplace_back(letters[(uint32_t)ext]);
                 last = next;
             }
         } else {
@@ -71,7 +71,7 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
             } else {
                 // Extend the simplitig to the left.
                 eraseKMer(kMers, next, k, complements);
-                simplitig.emplace_front(letters[(unsigned int)ext]);
+                simplitig.emplace_front(letters[(uint32_t)ext]);
                 first = next;
             }
         }
