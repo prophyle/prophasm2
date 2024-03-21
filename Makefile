@@ -27,11 +27,11 @@ quick-verify: $(PROG) $(SCRIPTS)/verify.py $(DATA)/spneumoniae.fa
 
 $(PROG): $(SRC)/main.cpp $(SRC)/$(wildcard *.cpp *.h *.hpp) src/version.h $(wildcard $(UINT256)/*.cpp $(UINT256)/*.h $(UINT256)/*.include)
 	./create-version.sh
-	$(CXX) $(CXXFLAGS) $(SRC)/main.cpp $(UINT256)/uint256_t.cpp $(SRC)/kthread.c -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(SRC)/main.cpp $(SRC)/kthread.c -o $@ $(LDFLAGS)
 
 
 prophasmtest: $(TESTS)/unittest.cpp gtest-all.o $(SRC)/$(wildcard *.cpp *.h *.hpp) $(TESTS)/$(wildcard *.cpp *.h *.hpp)
-	$(CXX) $(CXXFLAGS) -isystem $(GTEST)/include -I $(GTEST)/include $(TESTS)/unittest.cpp $(UINT256)/uint256_t.cpp gtest-all.o -pthread -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -isystem $(GTEST)/include -I $(GTEST)/include $(TESTS)/unittest.cpp  gtest-all.o -pthread -o $@ $(LDFLAGS)
 
 gtest-all.o: $(GTEST)/src/gtest-all.cc $(wildcard *.cpp *.h *.hpp)
 	$(CXX) $(CXXFLAGS) -isystem $(GTEST)/include -I $(GTEST)/include -I $(GTEST) -DGTEST_CREATE_SHARED_LIBRARY=1 -c -pthread $(GTEST)/src/gtest-all.cc -o $@
