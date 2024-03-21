@@ -60,7 +60,7 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
             } else {
                 // Extend the simplitig to the right.
                 eraseKMer(kMers, next, k, complements);
-                simplitig.emplace_back(letters[ext]);
+                simplitig.emplace_back(letters[(unsigned int)ext]);
                 last = next;
             }
         } else {
@@ -71,7 +71,7 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
             } else {
                 // Extend the simplitig to the left.
                 eraseKMer(kMers, next, k, complements);
-                simplitig.emplace_front(letters[ext]);
+                simplitig.emplace_front(letters[(unsigned int)ext]);
                 first = next;
             }
         }
@@ -121,3 +121,5 @@ INIT_PROPHASM(64, 64S)
 INIT_PROPHASM(64, 64M)
 INIT_PROPHASM(128, 128S)
 INIT_PROPHASM(128, 128M)
+INIT_PROPHASM(256, 256S)
+INIT_PROPHASM(256, 256M)
