@@ -1,5 +1,7 @@
 #ifndef __LITTLE_ENDIAN__
+#ifndef __BIG_ENDIAN__
   #define __LITTLE_ENDIAN__ 1
+#endif
 #endif
 #include "uint256_t.build"
 #include <vector>
