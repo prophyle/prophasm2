@@ -21,9 +21,9 @@ namespace {
         };
 
         for (auto t: tests) {
-            auto kMers = kh_init_S64();
+            auto kMers = kh_init_S64M();
             int ret;
-            for (auto &&kMer : t.kMers) kh_put_S64(kMers, kMer, &ret);
+            for (auto &&kMer : t.kMers) kh_put_S64M(kMers, kMer, &ret);
 
             auto got = RightExtension(t.last, kMers, t.k, t.complements);
             auto gotExt = got.first;
@@ -51,9 +51,9 @@ namespace {
         };
 
         for (auto t: tests) {
-            auto kMers = kh_init_S64();
+            auto kMers = kh_init_S64M();
             int ret;
-            for (auto &&kMer : t.kMers) kh_put_S64(kMers, kMer, &ret);
+            for (auto &&kMer : t.kMers) kh_put_S64M(kMers, kMer, &ret);
 
             auto got = LeftExtension(t.first, kMers, t.k, t.complements);
             auto gotExt = got.first;
@@ -85,9 +85,9 @@ namespace {
 
         for (auto &&t: tests) {
             std::stringstream of;
-            auto kMers = kh_init_S64();
+            auto kMers = kh_init_S64M();
             int ret;
-            for (auto &&kMer : t.kMers) kh_put_S64(kMers, kMer, &ret);
+            for (auto &&kMer : t.kMers) kh_put_S64M(kMers, kMer, &ret);
 
             NextSimplitig(kMers, t.kMers.front(), of, t.k, t.complements, t.simplitigID);
             auto remainingKmers = kMersToVec(kMers);
@@ -116,9 +116,9 @@ namespace {
 
         for (auto t: tests) {
             std::stringstream of;
-            auto kMers = kh_init_S64();
+            auto kMers = kh_init_S64M();
             int ret;
-            for (auto &&kMer : t.kMers) kh_put_S64(kMers, kMer, &ret);
+            for (auto &&kMer : t.kMers) kh_put_S64M(kMers, kMer, &ret);
 
             ComputeSimplitigs(kMers, of, t.k, t.complements);
 

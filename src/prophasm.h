@@ -81,7 +81,7 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
 }
 
 
-#define INIT_PROPHASM(type)                                                                                            \
+#define INIT_PROPHASM(type, variant)                                                                                            \
                                                                                                                        \
 /*  Heuristically compute simplitigs.                                                                                  \
  *                                                                                                                     \
@@ -89,7 +89,7 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
  *  If this is the case, k-mers are expected not to contain both k-mer and its complement.                             \
  *  Warning: this will destroy kMers.                                                                                  \
  */                                                                                                                    \
-int ComputeSimplitigs(kh_S##type##_t *kMers, std::ostream& of, int k, bool complements) {                              \
+int ComputeSimplitigs(kh_S##variant##_t *kMers, std::ostream& of, int k, bool complements) {                              \
     size_t lastIndex = 0;                                                                                              \
     kmer##type##_t begin = 0;                                                                                          \
     int simplitigID = 0;                                                                                               \
@@ -102,8 +102,8 @@ int ComputeSimplitigs(kh_S##type##_t *kMers, std::ostream& of, int k, bool compl
 }                                                                                                                      \
                                                                                                                        \
 /* Data for parallel computation of simplitigs. */                                                                     \
-struct ComputeSimplitigsData##type {                                                                                   \
-    std::vector<kh_S##type##_t *> kMers;                                                                               \
+struct ComputeSimplitigsData##variant {                                                                                   \
+    std::vector<kh_S##variant##_t *> kMers;                                                                               \
     std::vector<std::ostream*> ofs;                                                                                    \
     int k;                                                                                                             \
     bool complements;                                                                                                  \
@@ -111,11 +111,13 @@ struct ComputeSimplitigsData##type {                                            
 };                                                                                                                     \
                                                                                                                        \
 /* Parallel wrapper for ComputeSimplitigs. */                                                                          \
-void ComputeSimplitigsThread##type(void *arg, long i, int _) {                                                         \
-    auto *data = (ComputeSimplitigsData##type *) arg;                                                                  \
+void ComputeSimplitigsThread##variant(void *arg, long i, int _) {                                                         \
+    auto *data = (ComputeSimplitigsData##variant *) arg;                                                                  \
     data->simplitigsCounts[i] = ComputeSimplitigs(data->kMers[i], *data->ofs[i], data->k, data->complements);          \
 }                                                                                                                      \
 
 
-INIT_PROPHASM(64)
-INIT_PROPHASM(128)
+INIT_PROPHASM(64, 64S)
+INIT_PROPHASM(64, 64M)
+INIT_PROPHASM(128, 128S)
+INIT_PROPHASM(128, 128M)

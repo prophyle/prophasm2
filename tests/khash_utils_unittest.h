@@ -16,9 +16,9 @@ namespace {
         };
 
         for (auto t: tests) {
-            auto kMers = kh_init_S64();
+            auto kMers = kh_init_S64M();
             int ret;
-            for (auto &&kMer : t.kMers) kh_put_S64(kMers, kMer, &ret);
+            for (auto &&kMer : t.kMers) kh_put_S64M(kMers, kMer, &ret);
 
             auto got = kMersToVec(kMers);
             sort(t.kMers.begin(), t.kMers.end());
@@ -45,14 +45,14 @@ namespace {
         };
 
         for (auto t : tests) {
-            std::vector<kh_S64_t *> input (t.kMerSets.size());
+            std::vector<kh_S64M_t *> input (t.kMerSets.size());
             for (size_t i = 0; i < t.kMerSets.size(); ++i) {
-                input[i] = kh_init_S64();
+                input[i] = kh_init_S64M();
                 int ret;
-                for (auto &&kMer : t.kMerSets[i]) kh_put_S64(input[i], kMer, &ret);
+                for (auto &&kMer : t.kMerSets[i]) kh_put_S64M(input[i], kMer, &ret);
             }
 
-            kh_S64_t * gotResult = kh_init_S64();
+            kh_S64M_t * gotResult = kh_init_S64M();
             getIntersection(gotResult, input, t.k, t.complements);
             auto gotResultVec = kMersToVec(gotResult);
             sort(t.wantResult.begin(), t.wantResult.end());
@@ -85,11 +85,11 @@ namespace {
         };
 
         for (auto t : tests) {
-            kh_S64_t * input = kh_init_S64();
+            kh_S64M_t * input = kh_init_S64M();
             int ret;
-            for (auto &&kMer : t.kMers) kh_put_S64(input, kMer, &ret);
-            auto intersection = kh_init_S64();
-            for (auto &&kMer : t.toRemove) kh_put_S64(intersection, kMer, &ret);
+            for (auto &&kMer : t.kMers) kh_put_S64M(input, kMer, &ret);
+            auto intersection = kh_init_S64M();
+            for (auto &&kMer : t.toRemove) kh_put_S64M(intersection, kMer, &ret);
 
             differenceInPlace(input, intersection, t.k, t.complements);
 
@@ -120,7 +120,7 @@ namespace {
         for (auto t : tests) {
             // Turn off optimizations for MINIMUM_ABUNDANCE being 1.
             MINIMUM_ABUNDANCE = 255;
-            kh_S64_t * input = kh_init_S64();
+            kh_S64M_t * input = kh_init_S64M();
             for (auto &&[abundance, kMer] : t.kMers) for (byte i = 0; i < abundance; ++i)
                 insertKMer(input, kMer, t.k, t.complements);
 
