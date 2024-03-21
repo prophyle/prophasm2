@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstdint>
 
-#include "uint256_t.h"
+#include "uint256_t/uint256_t.h"
 
 typedef uint64_t kmer64_t;
 typedef __uint128_t kmer128_t;
