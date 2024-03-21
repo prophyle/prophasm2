@@ -9,14 +9,14 @@
 #include "khash_utils.h"
 
 
-#define INIT_PARSER(type, variant)                                                                                 \
+#define INIT_PARSER(type, variant)                                                                        \
 /*  Read encoded k-mers from the given fasta file.                                                        \
  *  Return unique k-mers in no particular order.                                                          \
  *  If complements is set to true, the result contains only one of the complementary k-mers               \
  *  - it is not guaranteed which one.                                                                     \
  *  This runs in O(sequence length) expected time.                                                        \
  */                                                                                                       \
-void ReadKMers(kh_S##variant##_t *kMers, std::string &path, int k, bool complements) {                       \
+void ReadKMers(kh_S##variant##_t *kMers, std::string &path, int k, bool complements) {                    \
     std::ifstream filestream;                                                                             \
     std::istream *fasta;                                                                                  \
     if (path == "-") {                                                                                    \
@@ -65,16 +65,16 @@ void ReadKMers(kh_S##variant##_t *kMers, std::string &path, int k, bool compleme
                                                                                                           \
                                                                                                           \
 /* Data for parallel reading of k-mers. */                                                                \
-struct ReadKMersData##variant {                                                                              \
-    std::vector<kh_S##variant##_t*> kMers;                                                                   \
+struct ReadKMersData##variant {                                                                           \
+    std::vector<kh_S##variant##_t*> kMers;                                                                \
     std::vector<std::string> paths;                                                                       \
     int k;                                                                                                \
     bool complements;                                                                                     \
 };                                                                                                        \
                                                                                                           \
 /* Parallel wrapper for ReadKMers. */                                                                     \
-void ReadKMersThread##variant(void *arg, long i, int _) {                                                    \
-    auto *data = (ReadKMersData##variant *) arg;                                                             \
+void ReadKMersThread##variant(void *arg, long i, int _) {                                                 \
+    auto *data = (ReadKMersData##variant *) arg;                                                          \
     ReadKMers(data->kMers[i], data->paths[i], data->k, data->complements);                                \
 }                                                                                                         \
 

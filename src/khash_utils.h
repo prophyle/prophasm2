@@ -29,47 +29,47 @@ byte MINIMUM_ABUNDANCE = 1;
 template <typename KHT>
 void differenceInPlace(KHT* kMerSet, KHT* intersection, int k, bool complements);
 
-#define INIT_KHASH_UTILS(type, variant)                                                                                      \
+#define INIT_KHASH_UTILS(type, variant)                                                                             \
                                                                                                                     \
 /* Data for parallel computation of set differences. */                                                             \
-struct DifferenceInPlaceData##variant {                                                                                \
-    std::vector<kh_S##variant##_t*> kMerSets;                                                                          \
-    kh_S##variant##_t* intersection;                                                                                   \
+struct DifferenceInPlaceData##variant {                                                                             \
+    std::vector<kh_S##variant##_t*> kMerSets;                                                                       \
+    kh_S##variant##_t* intersection;                                                                                \
     int k;                                                                                                          \
     bool complements;                                                                                               \
 };                                                                                                                  \
                                                                                                                     \
 /* Determine whether the canonical k-mer is present.*/                                                              \
-bool containsKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                                    \
+bool containsKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                         \
     if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
-    bool contains_key = kh_get_S##variant(kMers, kMer) != kh_end(kMers);                                               \
+    bool contains_key = kh_get_S##variant(kMers, kMer) != kh_end(kMers);                                            \
     if (MINIMUM_ABUNDANCE == 1) return contains_key;                                                                \
     if (!contains_key) return false;                                                                                \
-    return kh_val(kMers, kh_get_S##variant(kMers, kMer)) >= MINIMUM_ABUNDANCE;                                         \
+    return kh_val(kMers, kh_get_S##variant(kMers, kMer)) >= MINIMUM_ABUNDANCE;                                      \
 }                                                                                                                   \
                                                                                                                     \
 /* Remove the canonical k-mer from the set.*/                                                                       \
-void eraseKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                                       \
+void eraseKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                            \
     if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
-    auto key = kh_get_S##variant(kMers, kMer);                                                                         \
+    auto key = kh_get_S##variant(kMers, kMer);                                                                      \
     if (key != kh_end(kMers)) {                                                                                     \
-        kh_del_S##variant(kMers, key);                                                                                 \
+        kh_del_S##variant(kMers, key);                                                                              \
     }                                                                                                               \
 }                                                                                                                   \
                                                                                                                     \
 /* Insert the canonical k-mer into the set. */                                                                      \
-void insertKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements, bool force = false) {                  \
+void insertKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements, bool force = false) {       \
     if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
     int ret;                                                                                                        \
     if (MINIMUM_ABUNDANCE == (byte)1) {                                                                             \
-        kh_put_S##variant(kMers, kMer, &ret);                                                                          \
+        kh_put_S##variant(kMers, kMer, &ret);                                                                       \
     } else {                                                                                                        \
         byte value = 0;                                                                                             \
-        khint_t key = kh_get_S##variant(kMers, kMer);                                                                  \
+        khint_t key = kh_get_S##variant(kMers, kMer);                                                               \
         if (key != kh_end(kMers)) {                                                                                 \
             value = kh_val(kMers, key);                                                                             \
         } else {                                                                                                    \
-            key = kh_put_S##variant(kMers, kMer, &ret);                                                                \
+            key = kh_put_S##variant(kMers, kMer, &ret);                                                             \
         }                                                                                                           \
         if (force || value == (byte)255) kh_value(kMers, key) = (byte)255;                                          \
         else kh_value(kMers, key) = value + 1;                                                                      \
@@ -77,8 +77,8 @@ void insertKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool compl
 }                                                                                                                   \
                                                                                                                     \
 /* Parallel wrapper for differenceInPlace. */                                                                       \
-void DifferenceInPlaceThread##variant(void *arg, long i, int _) {                                                      \
-    auto data = (DifferenceInPlaceData##variant*)arg;                                                                  \
+void DifferenceInPlaceThread##variant(void *arg, long i, int _) {                                                   \
+    auto data = (DifferenceInPlaceData##variant*)arg;                                                               \
     differenceInPlace(data->kMerSets[i], data->intersection, data->k, data->complements);                           \
 }                                                                                                                   \
 
