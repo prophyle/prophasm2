@@ -49,7 +49,7 @@ namespace {
 
     TEST(KMers, NumberToKMer) {
         struct TestCase {
-            kmer_t encoded;
+            kmer_t encoded ;
             int d;
             std::string wantResult;
         };
@@ -67,7 +67,7 @@ namespace {
         }
     }
 
-    TEST(KMers, MaskForK) {
+    TEST(KMers, MaskForK64) {
         struct TestCase {
             int k;
             kmer_t wantResult;
@@ -80,7 +80,7 @@ namespace {
         };
 
         for (auto t: tests) {
-            kmer_t gotResult = MaskForK(t.k);
+            kmer_t gotResult = MaskForK64(t.k);
 
             EXPECT_EQ(t.wantResult, gotResult);
         }

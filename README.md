@@ -19,7 +19,9 @@
 
 ProphAsm2 is a versatile tool for computing simplitigs/SPSS
 from *k-mer sets* and for *k-mer set operations*.
-The new features compared to the original [ProphAsm](https://github.com/prophyle/prophasm) include a largely speed and memory optimization, parallelization, and support for minimum abundancies.
+The new features compared to the original [ProphAsm](https://github.com/prophyle/prophasm)
+include a largely speed and memory optimization, parallelization,
+support for k-mer sizes up to 64 and support for minimum abundances.
 
 Various types of sequencing datasets can be used as the input for
 ProphAsm, including genomes, pan-genomes, metagenomes or sequencing reads.
@@ -36,7 +38,7 @@ also set differences.
 
 
 
-## Prerequisities
+## Prerequisites
 
 * GCC 4.8+ or equivalent
 * ZLib
@@ -90,22 +92,22 @@ def extend_simplitig_forward (K, simplitig):
 	while extending:
 		extending = False
 		q = simplitig[-k+1:]
-		for x in [‘A’, ‘C’, ‘G’, ‘T’]:
+		for x in ['A', 'C', 'G', 'T']:
 			kmer = q + x
 			if kmer in K:
 				extending = True
 				simplitig = simplitig + x
-				S.remove (kmer)
-				S.remove (reverse_complement (kmer))
+				K.remove (kmer)
+				K.remove (reverse_complement (kmer))
 				break
-	return S, s
+	return K, kmer
 
 def get_maximal_simplitig (K, initial_kmer):
 	simplitig = initial_kmer
 	K.remove (initial_kmer)
-	K.remove (reverse_completement (initial_kmer))
+	K.remove (reverse_complement (initial_kmer))
 	K, simplitig = extend_simplitig_forward (K, simplitig)
-	simplitig = reverse_completent (simplitig)
+	simplitig = reverse_complement (simplitig)
 	K, simplitig = extend_simplitig_forward (K, simplitig)
 	return K, simplitig
 
@@ -113,7 +115,7 @@ def compute_simplitigs (kmers):
 	K = set()
 	for kmer in kmers:
 		K.add (kmer)
-		K.add (reverse_completement(kmer))
+		K.add (reverse_complement(kmer))
 	simplitigs = set()
 	while |K|>0:
 		initial_kmer = K.random()

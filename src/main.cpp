@@ -9,12 +9,7 @@
 #include "khash_utils.h"
 
 
-#ifdef LARGE_KMERS
-    constexpr int MAX_K = 64;
-    const std::string VARIANT = "(128bit k-mer variant)";
-#else
-    constexpr int MAX_K = 32;
-#endif
+constexpr int MAX_K = 64;
 
 
 int Help() {
@@ -61,6 +56,150 @@ void TestFile(FILE *fo, std::string fn) {
         exit(1);
     }
 }
+
+#define INIT_RUN(type, version)                                                                                         \
+                                                                                                                        \
+int run##version(int32_t k,                                                                                             \
+    std::string intersectionPath,                                                                                       \
+    std::vector<std::string> inPaths,                                                                                   \
+    std::vector<std::string> outPaths,                                                                                  \
+    std::string statsPath,                                                                                              \
+    FILE *fstats,                                                                                                       \
+    bool computeIntersection,                                                                                           \
+    bool computeOutput,                                                                                                 \
+    bool verbose,                                                                                                       \
+    bool complements,                                                                                                   \
+    int threads,                                                                                                        \
+    size_t setCount) {                                                                                                  \
+                                                                                                                        \
+    if (verbose) {                                                                                                      \
+        std::cerr << "=====================" << std::endl;                                                              \
+        std::cerr << "1) Loading references" << std::endl;                                                              \
+        std::cerr << "=====================" << std::endl;                                                              \
+    }                                                                                                                   \
+    std::vector<kh_S##version##_t*> fullSets(setCount);                                                                 \
+    std::vector<size_t> inSizes = std::vector<size_t>(setCount);                                                        \
+    std::vector<size_t> outSizes;                                                                                       \
+                                                                                                                        \
+    for (size_t i = 0; i < setCount; i++) {                                                                             \
+        fullSets[i] = kh_init_S##version();                                                                             \
+    }                                                                                                                   \
+                                                                                                                        \
+    ReadKMersData##version data = {fullSets, inPaths, k, complements};                                                  \
+    kt_for(threads, ReadKMersThread##version, (void*)&data, setCount);                                                  \
+                                                                                                                        \
+    for (size_t i = 0; i < setCount; i++) {                                                                             \
+        if (verbose) {                                                                                                  \
+            std::cerr << "Loaded " << inPaths[i] << std::endl;                                                          \
+        }                                                                                                               \
+        inSizes[i] = kh_size(fullSets[i]);                                                                              \
+        if (fstats != nullptr) {                                                                                        \
+            fprintf(fstats,"%s\t%lu\n", inPaths[i].c_str(), inSizes[i]);                                                \
+        }                                                                                                               \
+    }                                                                                                                   \
+                                                                                                                        \
+    if (verbose) {                                                                                                      \
+        std::cerr << "===============" << std::endl;                                                                    \
+        std::cerr << "2) Intersecting" << std::endl;                                                                    \
+        std::cerr << "===============" << std::endl;                                                                    \
+    }                                                                                                                   \
+    kh_S##version##_t* intersection = kh_init_S##version();                                                             \
+    size_t intersectionSize = 0;                                                                                        \
+    if (computeIntersection) {                                                                                          \
+        if (verbose) {                                                                                                  \
+            std::cerr << "2.1) Computing intersection" << std::endl;                                                    \
+        }                                                                                                               \
+        getIntersection(intersection, fullSets, k, complements);                                                        \
+        intersectionSize  = kh_size(intersection);                                                                      \
+        if (verbose) {                                                                                                  \
+            std::cerr << "   intersection size: " <<  intersectionSize << std::endl;                                    \
+        }                                                                                                               \
+        if (computeOutput) {                                                                                            \
+            if (verbose) {                                                                                              \
+                std::cerr << "2.2) Removing this intersection from all k-mer sets" << std::endl;                        \
+            }                                                                                                           \
+            DifferenceInPlaceData##version data = {fullSets, intersection, k, complements};                             \
+            kt_for(threads, DifferenceInPlaceThread##version, (void*)&data, setCount);                                  \
+        }                                                                                                               \
+    }                                                                                                                   \
+    if (computeOutput) {                                                                                                \
+        for (size_t i = 0; i < setCount; i++) {                                                                         \
+            outSizes.push_back(kh_size(fullSets[i]));                                                                   \
+            if (inSizes[i] != outSizes[i] + intersectionSize) {                                                         \
+                std::cerr << "Internal error: k-mer set sizes do not correspond "                                       \
+                    << inSizes[i] << " != " << outSizes[i] << " + " << intersectionSize << std::endl;                   \
+                return 1;                                                                                               \
+            }                                                                                                           \
+            if (verbose){                                                                                               \
+                std::cerr << inSizes[i] << " " << outSizes[i] << " ...inter:" << intersectionSize << std::endl;         \
+            }                                                                                                           \
+        }                                                                                                               \
+    }                                                                                                                   \
+                                                                                                                        \
+    if (verbose){                                                                                                       \
+        std::cerr << "=============" << std::endl;                                                                      \
+        std::cerr << "3) Assembling" << std::endl;                                                                      \
+        std::cerr << "=============" << std::endl;                                                                      \
+    }                                                                                                                   \
+    if (computeOutput) {                                                                                                \
+        std::vector<std::ostream*> ofs (setCount);                                                                      \
+        std::vector<std::ofstream> filestreams (setCount);                                                              \
+                                                                                                                        \
+        for (size_t i = 0; i < setCount; i++) {                                                                         \
+            if (outPaths[i] != "-") {                                                                                   \
+                filestreams[i] = std::ofstream(outPaths[i]);                                                            \
+                ofs[i] = &filestreams[i];                                                                               \
+            } else {                                                                                                    \
+                ofs[i] = &std::cout;                                                                                    \
+            }                                                                                                           \
+            if (fstats) {                                                                                               \
+                fprintf(fstats,"%s\t%lu\n", outPaths[i].c_str(), outSizes[i]);                                          \
+            }                                                                                                           \
+        }                                                                                                               \
+        ComputeSimplitigsData##version data = {fullSets, ofs, k, complements, std::vector<int>(setCount)};              \
+        kt_for(threads, ComputeSimplitigsThread##version, (void*)&data, setCount);                                      \
+                                                                                                                        \
+        for (size_t i = 0; i < setCount; i++) {                                                                         \
+            if (verbose) {                                                                                              \
+                std::cerr << "   assembly finished (" << data.simplitigsCounts[i] << " contigs)" << std::endl;          \
+            }                                                                                                           \
+            if (filestreams[i].is_open()) {                                                                             \
+                filestreams[i].close();                                                                                 \
+            }                                                                                                           \
+        }                                                                                                               \
+    }                                                                                                                   \
+    if (computeIntersection) {                                                                                          \
+        std::ostream *of;                                                                                               \
+        std::ofstream filestream;                                                                                       \
+        if (intersectionPath != "-") {                                                                                  \
+            filestream = std::ofstream(intersectionPath);                                                               \
+            of = &filestream;                                                                                           \
+        }                                                                                                               \
+        else {                                                                                                          \
+            of = &std::cout;                                                                                            \
+        }                                                                                                               \
+        if (fstats) {                                                                                                   \
+            fprintf(fstats,"%s\t%lu\n", intersectionPath.c_str(), intersectionSize);                                    \
+        }                                                                                                               \
+        int simplitigCount = ComputeSimplitigs(intersection, *of, k, complements);                                      \
+        if (verbose) {                                                                                                  \
+            std::cerr << "   assembly finished (" << simplitigCount << " contigs)" << std::endl;                        \
+        }                                                                                                               \
+        if (filestream.is_open()) {                                                                                     \
+            filestream.close();                                                                                         \
+        }                                                                                                               \
+    }                                                                                                                   \
+    if (fstats){                                                                                                        \
+        fclose(fstats);                                                                                                 \
+    }                                                                                                                   \
+    return 0;                                                                                                           \
+}                                                                                                                       \
+
+
+INIT_RUN(64, 64S)
+INIT_RUN(64, 64M)
+INIT_RUN(128, 128S)
+INIT_RUN(128, 128M)
 
 int main(int argc, char **argv) {
     int32_t k = -1;
@@ -176,137 +315,25 @@ int main(int argc, char **argv) {
         std::cerr << "Number of threads is greater than the number of input sets. Using " << threads << " threads instead." << std::endl;
     }
 
-
     if (fstats) {
         fprintf(fstats,"# cmd: %s",argv[0]);
-
         for (int32_t i = 1; i < argc; i++){
             fprintf(fstats," %s",argv[i]);
         }
         fprintf(fstats,"\n");
     }
 
-    if (verbose) {
-        std::cerr << "=====================" << std::endl;
-        std::cerr << "1) Loading references" << std::endl;
-        std::cerr << "=====================" << std::endl;
-    }
-    std::vector<kh_S64_t*> fullSets(setCount);
-    std::vector<size_t> inSizes = std::vector<size_t>(setCount);
-    std::vector<size_t> outSizes;
-
-
-
-
-    for (size_t i = 0; i < setCount; i++) {
-        fullSets[i] = kh_init_S64();
-    }
-
-    ReadKMersData data = {fullSets, inPaths, k, complements};
-    kt_for(threads, ReadKMersThread, (void*)&data, setCount);
-
-    for (size_t i = 0; i < setCount; i++) {
-        if (verbose) {
-            std::cerr << "Loaded " << inPaths[i] << std::endl;
+    if (k <= 32) {
+        if (MINIMUM_ABUNDANCE == (byte)1) {
+            return run64S(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
+        } else {
+            return run64M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
         }
-        inSizes[i] = kh_size(fullSets[i]);
-        if (fstats != nullptr) {
-            fprintf(fstats,"%s\t%lu\n", inPaths[i].c_str(), inSizes[i]);
+    } else {
+        if (MINIMUM_ABUNDANCE == (byte)1) {
+            return run128S(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
+        } else {
+            return run128M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
         }
     }
-
-    if (verbose) {
-        std::cerr << "===============" << std::endl;
-        std::cerr << "2) Intersecting" << std::endl;
-        std::cerr << "===============" << std::endl;
-    }
-    kh_S64_t* intersection = nullptr;
-    size_t intersectionSize = 0;
-    if (computeIntersection) {
-        if (verbose) {
-            std::cerr << "2.1) Computing intersection" << std::endl;
-        }
-        intersection = getIntersection(fullSets, k, complements);
-        intersectionSize  = kh_size(intersection);
-        if (verbose) {
-            std::cerr << "   intersection size: " <<  intersectionSize << std::endl;
-        }
-        if (computeOutput) {
-            if (verbose) {
-                std::cerr << "2.2) Removing this intersection from all k-mer sets" << std::endl;
-            }
-            DifferenceInPlaceData data = {fullSets, intersection, k, complements};
-            kt_for(threads, DifferenceInPlaceThread, (void*)&data, setCount);
-        }
-    }
-    if (computeOutput) {
-        for (size_t i = 0; i < setCount; i++) {
-            outSizes.push_back(kh_size(fullSets[i]));
-            if (inSizes[i] != outSizes[i] + intersectionSize) {
-                std::cerr << "Internal error: k-mer set sizes do not correspond " << inSizes[i] << " != " << outSizes[i] << " + " << intersectionSize << std::endl;
-                return 1;
-            }
-            if (verbose){
-                std::cerr << inSizes[i] << " " << outSizes[i] << " ...inter:" << intersectionSize << std::endl;
-            }
-        }
-    }
-
-    if (verbose){
-        std::cerr << "=============" << std::endl;
-        std::cerr << "3) Assembling" << std::endl;
-        std::cerr << "=============" << std::endl;
-    }
-    if (computeOutput) {
-        std::vector<std::ostream*> ofs (setCount);
-        std::vector<std::ofstream> filestreams (setCount);
-
-        for (size_t i = 0; i < setCount; i++) {
-            if (outPaths[i] != "-") {
-                filestreams[i] = std::ofstream(outPaths[i]);
-                ofs[i] = &filestreams[i];
-            } else {
-                ofs[i] = &std::cout;
-            }
-            if (fstats) {
-                fprintf(fstats,"%s\t%lu\n", outPaths[i].c_str(), outSizes[i]);
-            }
-        }
-        ComputeSimplitigsData data = {fullSets, ofs, k, complements, std::vector<int>(setCount)};
-        kt_for(threads, ComputeSimplitigsThread, (void*)&data, setCount);
-
-        for (size_t i = 0; i < setCount; i++) {
-            if (verbose) {
-                std::cerr << "   assembly finished (" << data.simplitigsCounts[i] << " contigs)" << std::endl;
-            }
-            if (filestreams[i].is_open()) {
-                filestreams[i].close();
-            }
-        }
-    }
-    if (computeIntersection) {
-        std::ostream *of;
-        std::ofstream filestream;
-        if (intersectionPath != "-") {
-            filestream = std::ofstream(intersectionPath);
-            of = &filestream;
-        }
-        else {
-            of = &std::cout;
-        }
-        if (fstats) {
-            fprintf(fstats,"%s\t%lu\n", intersectionPath.c_str(), intersectionSize);
-        }
-        int simplitigCount = ComputeSimplitigs(intersection, *of, k, complements);
-        if (verbose) {
-            std::cerr << "   assembly finished (" << simplitigCount << " contigs)" << std::endl;
-        }
-        if (filestream.is_open()) {
-            filestream.close();
-        }
-    }
-    if (fstats){
-        fclose(fstats);
-    }
-    return 0;
 }

@@ -1,3 +1,6 @@
+#include "../src/kmers.h"
+typedef kmer64_t  kmer_t;
+
 #include "kmers_unittest.h"
 #include "prophasm_unittest.h"
 #include "khash_utils_unittest.h"
