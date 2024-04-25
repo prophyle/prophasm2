@@ -79,7 +79,7 @@ inline kmer128_t word_reverse_complement(kmer128_t w) {
 inline kmer256_t word_reverse_complement(kmer256_t w) {
     kmer128_t low = word_reverse_complement(w.lower());
     kmer128_t high = word_reverse_complement(w.upper());
-    return kmer256_t(high, low);
+    return kmer256_t(low, high);
 }
 
 constexpr int KMER_SIZE_64 = 64;
