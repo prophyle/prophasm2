@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <fstream>
+#include <stack>
 
 #include "kmers.h"
 #include "khash_utils.h"
@@ -46,7 +47,10 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
      // Maintain the first and last k-mer in the simplitig.
     kmer_t last = begin, first = begin;
     std::string initialKMer = NumberToKMer(begin, k);
-    std::list<char> simplitig {initialKMer.begin(), initialKMer.end()};
+    std::stack<char> simplitig {};
+    for (int i = k - 1; i >= 0; --i) {
+        simplitig.push(initialKMer[i]);
+    }
     eraseKMer(kMers, last, k, complements);
     bool extendToRight = true;
     bool extendToLeft = true;
@@ -58,13 +62,15 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
         } else {
             // Extend the simplitig to the left.
             eraseKMer(kMers, next, k, complements);
-            simplitig.emplace_front(letters[ext]);
+            simplitig.push(letters[ext]);
             first = next;
         }
     }
     of << ">" << simplitigID << std::endl;
-    of << std::string(simplitig.begin(), simplitig.end());
-    simplitig.resize(0);
+    while (!simplitig.empty()) {
+        of << simplitig.top();
+        simplitig.pop();
+    }
     while (extendToRight) {
         auto [ext, next] = RightExtension(last, kMers, k, complements);
         if (ext == kmer_t(-1)) {
