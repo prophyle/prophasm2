@@ -105,7 +105,7 @@ INIT_KHASH_UTILS(256, 256M)
 
 /// Return the next k-mer in the k-mer set and update the index.
 template <typename KHT, typename kmer_t>
-kmer_t nextKMer(KHT *kMers, size_t &lastIndex, kmer_t &kMer) {
+inline kmer_t nextKMer(KHT *kMers, size_t &lastIndex, kmer_t &kMer) {
     for (size_t i = kh_begin(kMers) + lastIndex; i != kh_end(kMers); ++i, ++lastIndex) {
         if (!kh_exist(kMers, i)) continue;
         kMer = kh_key(kMers, i);

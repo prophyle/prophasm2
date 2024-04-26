@@ -16,12 +16,12 @@
 /// Find the right extension to the provided last k-mer from the kMers by trying to append each of {A, C, G, T}.
 /// Return the extension - that is the d chars extending the simplitig - and the extending kMer.
 template <typename KHT, typename kmer_t>
-inline uint32_t RightExtension(kmer_t &last, kmer_t &complement, KHT *kMers, int k, bool complements) {
+inline uint32_t RightExtension(kmer_t &last, kmer_t &complement, kmer_t &canonical, KHT *kMers, int k, bool complements) {
     kmer_t k2m1 = (k - 1) << 1;
     for (kmer_t ext = 0; ext < 4; ++ext) {
         kmer_t next = (BitSuffix(last, k - 1) << 2) | ext;
         kmer_t nextComplement = ((ext ^ 3) << k2m1) | (complement >> 2);
-        kmer_t canonical = next;
+        canonical = next;
         if (complements) canonical = std::min(next, nextComplement);
         if (containsCanonicalKMer(kMers, canonical)) {
             last = next;
@@ -35,12 +35,12 @@ inline uint32_t RightExtension(kmer_t &last, kmer_t &complement, KHT *kMers, int
 /// Find the left extension to the provided first k-mer from the kMers by trying to prepend each of {A, C, G, T}.
 /// Return the extension - that is the d chars extending the simplitig - and the extending kMer.
 template <typename KHT, typename kmer_t>
-inline uint32_t LeftExtension(kmer_t &first, kmer_t &complement, KHT *kMers, int k,  bool complements) {
+inline uint32_t LeftExtension(kmer_t &first, kmer_t &complement, kmer_t &canonical, KHT *kMers, int k,  bool complements) {
     kmer_t k2m1 = (k - 1) << 1;
     for (kmer_t ext = 0; ext < 4; ++ext) {
         kmer_t next = (ext << k2m1) | (first >> 2);
         kmer_t nextComplement = (BitSuffix(complement, k - 1) << 2) | (ext ^ 3);
-        kmer_t canonical = next;
+        canonical = next;
         if (complements) canonical = std::min(next, nextComplement);
         if (containsCanonicalKMer(kMers, canonical)) {
             first = next;
@@ -59,6 +59,7 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
      // Maintain the first and last k-mer in the simplitig.
     kmer_t last = begin, first = begin;
     kmer_t complement = ReverseComplement(begin, k);
+    kmer_t canonical;
     std::string initialKMer = NumberToKMer(begin, k);
     std::stack<char> simplitig {};
     for (int i = k - 1; i >= 0; --i) {
@@ -68,13 +69,13 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
     bool extendToRight = true;
     bool extendToLeft = true;
     while (extendToLeft) {
-        uint32_t ext =  LeftExtension(first, complement, kMers, k, complements);
+        uint32_t ext =  LeftExtension(first, complement,canonical, kMers, k, complements);
         if (ext == uint32_t(-1)) {
             // No left extension found.
             extendToLeft = false;
         } else {
             // Extend the simplitig to the left.
-            eraseCanonicalKMer(kMers, std::min(first, complement));
+            eraseCanonicalKMer(kMers, canonical);
             simplitig.push(letters[ext]);
         }
     }
@@ -85,13 +86,13 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
         simplitig.pop();
     }
     while (extendToRight) {
-        uint32_t ext = RightExtension(last, complement, kMers, k, complements);
+        uint32_t ext = RightExtension(last, complement, canonical, kMers, k, complements);
         if (ext == uint32_t(-1)) {
             // No right extension found.
             extendToRight = false;
         } else {
             // Extend the simplitig to the right.
-            eraseCanonicalKMer(kMers, std::min(last, complement));
+            eraseCanonicalKMer(kMers, canonical);
             of << letters[ext];
         }
     }
