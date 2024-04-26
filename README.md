@@ -21,7 +21,7 @@ ProphAsm2 is a versatile tool for computing simplitigs/SPSS
 from *k-mer sets* and for *k-mer set operations*.
 The new features compared to the original [ProphAsm](https://github.com/prophyle/prophasm)
 include a largely speed and memory optimization, parallelization,
-support for k-mer sizes up to 64 and support for minimum abundances.
+support for k-mer sizes up to 128 and support for minimum abundances.
 
 Various types of sequencing datasets can be used as the input for
 ProphAsm, including genomes, pan-genomes, metagenomes or sequencing reads.
