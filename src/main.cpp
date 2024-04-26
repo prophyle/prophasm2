@@ -57,9 +57,9 @@ void TestFile(FILE *fo, std::string fn) {
     }
 }
 
-#define INIT_RUN(type, version)                                                                                                  \
+#define INIT_RUN(type, version)                                                                                         \
                                                                                                                         \
-int run##version(int32_t k,                                                                                                \
+int run##version(int32_t k,                                                                                             \
     std::string intersectionPath,                                                                                       \
     std::vector<std::string> inPaths,                                                                                   \
     std::vector<std::string> outPaths,                                                                                  \
@@ -77,16 +77,16 @@ int run##version(int32_t k,                                                     
         std::cerr << "1) Loading references" << std::endl;                                                              \
         std::cerr << "=====================" << std::endl;                                                              \
     }                                                                                                                   \
-    std::vector<kh_S##version##_t*> fullSets(setCount);                                                                    \
+    std::vector<kh_S##version##_t*> fullSets(setCount);                                                                 \
     std::vector<size_t> inSizes = std::vector<size_t>(setCount);                                                        \
     std::vector<size_t> outSizes;                                                                                       \
                                                                                                                         \
     for (size_t i = 0; i < setCount; i++) {                                                                             \
-        fullSets[i] = kh_init_S##version();                                                                                \
+        fullSets[i] = kh_init_S##version();                                                                             \
     }                                                                                                                   \
                                                                                                                         \
-    ReadKMersData##version data = {fullSets, inPaths, k, complements};                                                     \
-    kt_for(threads, ReadKMersThread##version, (void*)&data, setCount);                                                     \
+    ReadKMersData##version data = {fullSets, inPaths, k, complements};                                                  \
+    kt_for(threads, ReadKMersThread##version, (void*)&data, setCount);                                                  \
                                                                                                                         \
     for (size_t i = 0; i < setCount; i++) {                                                                             \
         if (verbose) {                                                                                                  \
@@ -103,7 +103,7 @@ int run##version(int32_t k,                                                     
         std::cerr << "2) Intersecting" << std::endl;                                                                    \
         std::cerr << "===============" << std::endl;                                                                    \
     }                                                                                                                   \
-    kh_S##version##_t* intersection = kh_init_S##version();                                                                   \
+    kh_S##version##_t* intersection = kh_init_S##version();                                                             \
     size_t intersectionSize = 0;                                                                                        \
     if (computeIntersection) {                                                                                          \
         if (verbose) {                                                                                                  \
@@ -118,8 +118,8 @@ int run##version(int32_t k,                                                     
             if (verbose) {                                                                                              \
                 std::cerr << "2.2) Removing this intersection from all k-mer sets" << std::endl;                        \
             }                                                                                                           \
-            DifferenceInPlaceData##version data = {fullSets, intersection, k, complements};                                \
-            kt_for(threads, DifferenceInPlaceThread##version, (void*)&data, setCount);                                     \
+            DifferenceInPlaceData##version data = {fullSets, intersection, k, complements};                             \
+            kt_for(threads, DifferenceInPlaceThread##version, (void*)&data, setCount);                                  \
         }                                                                                                               \
     }                                                                                                                   \
     if (computeOutput) {                                                                                                \
@@ -156,8 +156,8 @@ int run##version(int32_t k,                                                     
                 fprintf(fstats,"%s\t%lu\n", outPaths[i].c_str(), outSizes[i]);                                          \
             }                                                                                                           \
         }                                                                                                               \
-        ComputeSimplitigsData##version data = {fullSets, ofs, k, complements, std::vector<int>(setCount)};                 \
-        kt_for(threads, ComputeSimplitigsThread##version, (void*)&data, setCount);                                         \
+        ComputeSimplitigsData##version data = {fullSets, ofs, k, complements, std::vector<int>(setCount)};              \
+        kt_for(threads, ComputeSimplitigsThread##version, (void*)&data, setCount);                                      \
                                                                                                                         \
         for (size_t i = 0; i < setCount; i++) {                                                                         \
             if (verbose) {                                                                                              \
