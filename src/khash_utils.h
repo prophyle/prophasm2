@@ -41,16 +41,21 @@ struct DifferenceInPlaceData##variant {                                         
 };                                                                                                                  \
                                                                                                                     \
 /* Determine whether the canonical k-mer is present.*/                                                              \
-inline bool containsKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                  \
-    if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
+inline bool containsCanonicalKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer) {                                  \
     bool contains_key = kh_get_S##variant(kMers, kMer) != kh_end(kMers);                                            \
     if (MINIMUM_ABUNDANCE == 1) return contains_key;                                                                \
     if (!contains_key) return false;                                                                                \
     return kh_val(kMers, kh_get_S##variant(kMers, kMer)) >= MINIMUM_ABUNDANCE;                                      \
 }                                                                                                                   \
                                                                                                                     \
+/* Determine whether the canonical form of a k-mer is present.*/                                                    \
+inline bool containsKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                  \
+    if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
+    return containsCanonicalKMer(kMers, kMer);                                                                      \
+}                                                                                                                   \
+                                                                                                                    \
 /* Remove the canonical k-mer from the set.*/                                                                       \
-void eraseKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                            \
+inline void eraseKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                     \
     if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
     auto key = kh_get_S##variant(kMers, kMer);                                                                      \
     if (key != kh_end(kMers)) {                                                                                     \
@@ -59,7 +64,7 @@ void eraseKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool comple
 }                                                                                                                   \
                                                                                                                     \
 /* Insert the canonical k-mer into the set. */                                                                      \
-void insertKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements, bool force = false) {       \
+inline void insertKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements, bool force=false) {  \
     if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
     int ret;                                                                                                        \
     if (MINIMUM_ABUNDANCE == (byte)1) {                                                                             \

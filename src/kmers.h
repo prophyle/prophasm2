@@ -12,7 +12,7 @@ typedef uint256_t kmer256_t;
 
 /// Convert the given basic nucleotide to int so it can be used for indexing in AC.
 /// If non-existing nucleotide is given, return -1.
-int NucleotideToInt (char c) {
+inline int NucleotideToInt (char c) {
     switch (c) {
         case 'A': return 0;
         case 'C': return 1;
@@ -28,13 +28,13 @@ int NucleotideToInt (char c) {
 
 /// Compute the prefix of size d of the given k-mer.
 template <typename kmer_t>
-kmer_t BitPrefix(kmer_t kMer, int k, int d) {
+inline kmer_t BitPrefix(kmer_t kMer, int k, int d) {
     return kMer >> ((k - d) << kmer_t(1));
 }
 
 /// Compute the suffix of size d of the given k-mer.
 template <typename kmer_t>
-kmer_t BitSuffix(kmer_t kMer, int d) {
+inline kmer_t BitSuffix(kmer_t kMer, int d) {
     return kMer & ((kmer_t(1) << (d << kmer_t(1))) - kmer_t(1));
 }
 

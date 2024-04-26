@@ -7,17 +7,19 @@ namespace {
     TEST(Prophasm, RightExtension) {
         struct TestCase {
             kmer_t last;
+            kmer_t complement; // Irrelevant if complements is set to false.
             std::vector<kmer_t> kMers;
             int k;
             bool complements;
-            kmer_t wantExt;
-            kmer_t  wantNext;
+            uint32_t wantExt;
+            kmer_t wantNext;
+            kmer_t wantComplement;
         };
         std::vector<TestCase> tests = {
                 // ACT; {TCC, CTA, ACT, CCT}; A; CTA
-                {0b000111, {0b110101, 0b011100, 0b000111, 0b010111}, 3, false, 0b00, 0b011100},
+                {0b000111, 0b001011, {0b110101, 0b011100, 0b000111, 0b010111}, 3, false, 0b00, 0b011100, 0b110010},
                 // ACT; {TCC, ACT, CCT}
-                {0b000111, {0b110101, 0b000111, 0b010111}, 3, false,  kmer_t(-1), kmer_t(-1)},
+                {0b000111, 0b001011, {0b110101, 0b000111, 0b010111}, 3, false,  uint32_t(-1), 0b000111, 0b001011},
         };
 
         for (auto t: tests) {
@@ -25,29 +27,30 @@ namespace {
             int ret;
             for (auto &&kMer : t.kMers) kh_put_S64M(kMers, kMer, &ret);
 
-            auto got = RightExtension(t.last, kMers, t.k, t.complements);
-            auto gotExt = got.first;
-            auto gotNext = got.second;
+            auto got = RightExtension(t.last, t.complement, kMers, t.k, t.complements);
 
-            EXPECT_EQ(t.wantNext, gotNext);
-            EXPECT_EQ(t.wantExt, gotExt);
+            EXPECT_EQ(t.wantNext, t.last);
+            EXPECT_EQ(t.wantComplement, t.complement);
+            EXPECT_EQ(t.wantExt, got);
         }
     }
 
     TEST(Prophasm, LeftExtension) {
         struct TestCase {
             kmer_t first;
+            kmer_t complement; // Irrelevant if complements is set to false.
             std::vector<kmer_t> kMers;
             int k;
             bool complements;
-            kmer_t wantExt;
-            kmer_t  wantNext;
+            uint32_t wantExt;
+            kmer_t wantNext;
+            kmer_t wantComplement;
         };
         std::vector<TestCase> tests = {
                 // ACT; {TCC, ACT, CCT}
-                {0b000111, {0b110101, 0b000111, 0b010111}, 3, false,   kmer_t(-1), kmer_t(-1)},
+                {0b000111, 0b001011, {0b110101, 0b000111, 0b010111}, 3, false,  uint32_t(-1), 0b000111, 0b001011},
                 // TAC; {TCC, CTA, ACT, CCT}; C; CTA
-                {0b110001, {0b110101, 0b011100, 0b000111, 0b010111}, 3, false, 0b01, 0b011100},
+                {0b110001, 0b101100, {0b110101, 0b011100, 0b000111, 0b010111}, 3, false, 0b01, 0b011100, 0b110010},
         };
 
         for (auto t: tests) {
@@ -55,11 +58,10 @@ namespace {
             int ret;
             for (auto &&kMer : t.kMers) kh_put_S64M(kMers, kMer, &ret);
 
-            auto got = LeftExtension(t.first, kMers, t.k, t.complements);
-            auto gotExt = got.first;
-            auto gotNext = got.second;
-            EXPECT_EQ(t.wantNext, gotNext);
-            EXPECT_EQ(t.wantExt, gotExt);
+            auto got = LeftExtension(t.first, t.complement, kMers, t.k, t.complements);
+            EXPECT_EQ(t.wantNext, t.first);
+            EXPECT_EQ(t.wantComplement, t.complement);
+            EXPECT_EQ(t.wantExt, got);
         }
     }
 
