@@ -32,6 +32,7 @@ void ReadKMers(kh_S##variant##_t *kMers, std::string &path, int k, bool compleme
     char c;                                                                                               \
     int beforeKMerEnd = k;                                                                                \
     kmer##type##_t currentKMer = 0;                                                                       \
+    kmer##type##_t complement = 0;                                                                        \
     /* mask that works even for k=32. */                                                                  \
     kmer##type##_t mask = (((kmer##type##_t) 1) <<  (2 * k - 1));                                         \
     mask |= mask - 1;                                                                                     \
@@ -55,9 +56,13 @@ void ReadKMers(kh_S##variant##_t *kMers, std::string &path, int k, bool compleme
         currentKMer <<= 2;                                                                                \
         currentKMer &= mask;                                                                              \
         currentKMer |= data;                                                                              \
+        complement >>= 2;                                                                                 \
+        complement |= ((kmer##type##_t (3)) ^ data) << ((k - 1) << 1);                                    \
         if(beforeKMerEnd > 0) --beforeKMerEnd;                                                            \
         if (beforeKMerEnd == 0) {                                                                         \
-            insertKMer(kMers, currentKMer, k, complements);                                               \
+            kmer##type##_t canonicalKMer = ((!complements) || currentKMer < complement) ?                 \
+                    currentKMer : complement;                                                             \
+            insertCanonicalKMer(kMers, canonicalKMer);                                                    \
         }                                                                                                 \
     }                                                                                                     \
     if (filestream.is_open()) filestream.close();                                                         \

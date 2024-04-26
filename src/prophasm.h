@@ -21,8 +21,7 @@ inline uint32_t RightExtension(kmer_t &last, kmer_t &complement, kmer_t &canonic
     for (kmer_t ext = 0; ext < 4; ++ext) {
         kmer_t next = (BitSuffix(last, k - 1) << 2) | ext;
         kmer_t nextComplement = ((ext ^ 3) << k2m1) | (complement >> 2);
-        canonical = next;
-        if (complements) canonical = std::min(next, nextComplement);
+        canonical = ((!complements) || next < nextComplement) ? next : nextComplement;
         if (containsCanonicalKMer(kMers, canonical)) {
             last = next;
             complement = nextComplement;
@@ -40,7 +39,7 @@ inline uint32_t LeftExtension(kmer_t &first, kmer_t &complement, kmer_t &canonic
     for (kmer_t ext = 0; ext < 4; ++ext) {
         kmer_t next = (ext << k2m1) | (first >> 2);
         kmer_t nextComplement = (BitSuffix(complement, k - 1) << 2) | (ext ^ 3);
-        canonical = next;
+        canonical = ((!complements) || next < nextComplement) ? next : nextComplement;
         if (complements) canonical = std::min(next, nextComplement);
         if (containsCanonicalKMer(kMers, canonical)) {
             first = next;
