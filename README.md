@@ -74,8 +74,19 @@ Set operations:
 USAGE-BEGIN
 -->
 ```
+Usage:    prophasm2 [options]
+Command-line parameters:
+ -k INT   K-mer size.
+ -i FILE  Input FASTA file (can be used multiple times).
+ -o FILE  Output FASTA file (if used, must be used as many times as -i).
+ -x FILE  Compute intersection, subtract it, save it.
+ -s FILE  Output file with k-mer statistics.
+ -t INT   Number of threads (default 1).
+ -m INT   Minimum abundance of k-mers to appear in the assembly (default 1).
+ -S       Silent mode.
+ -u       Do not consider k-mer and its reverse complement as equivalent.
 
-
+Note that '-' can be used for standard input/output. 
 ```
 <!---
 USAGE-END
