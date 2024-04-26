@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <fstream>
+#include <stack>
 
 #include "kmers.h"
 #include "khash_utils.h"
@@ -46,38 +47,43 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
      // Maintain the first and last k-mer in the simplitig.
     kmer_t last = begin, first = begin;
     std::string initialKMer = NumberToKMer(begin, k);
-    std::list<char> simplitig {initialKMer.begin(), initialKMer.end()};
+    std::stack<char> simplitig {};
+    for (int i = k - 1; i >= 0; --i) {
+        simplitig.push(initialKMer[i]);
+    }
     eraseKMer(kMers, last, k, complements);
-    // TODO: print the right simplitig part directly after constructing the left part.
     bool extendToRight = true;
     bool extendToLeft = true;
-    while (extendToRight || extendToLeft) {
-        if (extendToRight) {
-            auto [ext, next] = RightExtension(last, kMers, k, complements);
-            if (ext == kmer_t(-1)) {
-                // No right extension found.
-                extendToRight = false;
-            } else {
-                // Extend the simplitig to the right.
-                eraseKMer(kMers, next, k, complements);
-                simplitig.emplace_back(letters[(uint32_t)ext]);
-                last = next;
-            }
+    while (extendToLeft) {
+        auto [ext, next] =  LeftExtension(first, kMers, k, complements);
+        if (ext == kmer_t(-1)) {
+            // No left extension found.
+            extendToLeft = false;
         } else {
-            auto [ext, next] =  LeftExtension(first, kMers, k, complements);
-            if (ext == kmer_t(-1)) {
-                // No left extension found.
-                extendToLeft = false;
-            } else {
-                // Extend the simplitig to the left.
-                eraseKMer(kMers, next, k, complements);
-                simplitig.emplace_front(letters[(uint32_t)ext]);
-                first = next;
-            }
+            // Extend the simplitig to the left.
+            eraseKMer(kMers, next, k, complements);
+            simplitig.push(letters[(uint32_t)ext]);
+            first = next;
         }
     }
     of << ">" << simplitigID << std::endl;
-    of << std::string(simplitig.begin(), simplitig.end()) << std::endl;
+    while (!simplitig.empty()) {
+        of << simplitig.top();
+        simplitig.pop();
+    }
+    while (extendToRight) {
+        auto [ext, next] = RightExtension(last, kMers, k, complements);
+        if (ext == kmer_t(-1)) {
+            // No right extension found.
+            extendToRight = false;
+        } else {
+            // Extend the simplitig to the right.
+            eraseKMer(kMers, next, k, complements);
+            of << letters[(uint32_t)ext];
+            last = next;
+        }
+    }
+    of << std::endl;
 }
 
 

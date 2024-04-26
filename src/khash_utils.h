@@ -41,7 +41,7 @@ struct DifferenceInPlaceData##variant {                                         
 };                                                                                                                  \
                                                                                                                     \
 /* Determine whether the canonical k-mer is present.*/                                                              \
-bool containsKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                         \
+inline bool containsKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                  \
     if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
     bool contains_key = kh_get_S##variant(kMers, kMer) != kh_end(kMers);                                            \
     if (MINIMUM_ABUNDANCE == 1) return contains_key;                                                                \
