@@ -9,7 +9,7 @@
 #include "khash_utils.h"
 
 
-constexpr int MAX_K = 64;
+constexpr int MAX_K = 128;
 
 
 int Help() {
@@ -109,7 +109,7 @@ int run##version(int32_t k,                                                     
         if (verbose) {                                                                                                  \
             std::cerr << "2.1) Computing intersection" << std::endl;                                                    \
         }                                                                                                               \
-        getIntersection(intersection, fullSets, k, complements);                                                        \
+        getIntersection(intersection, fullSets);                                                                        \
         intersectionSize  = kh_size(intersection);                                                                      \
         if (verbose) {                                                                                                  \
             std::cerr << "   intersection size: " <<  intersectionSize << std::endl;                                    \
@@ -198,8 +198,8 @@ int run##version(int32_t k,                                                     
 
 INIT_RUN(64, 64S)
 INIT_RUN(64, 64M)
-INIT_RUN(128, 128S)
 INIT_RUN(128, 128M)
+INIT_RUN(256, 256M)
 
 int main(int argc, char **argv) {
     int32_t k = -1;
@@ -329,11 +329,9 @@ int main(int argc, char **argv) {
         } else {
             return run64M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
         }
+    } else if (k <= 64) {
+        return run128M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
     } else {
-        if (MINIMUM_ABUNDANCE == (byte)1) {
-            return run128S(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
-        } else {
-            return run128M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
-        }
+        return run256M(k, intersectionPath, inPaths, outPaths, statsPath, fstats, computeIntersection, computeOutput, verbose, complements, threads, setCount);
     }
 }
