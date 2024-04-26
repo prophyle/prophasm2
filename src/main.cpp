@@ -109,7 +109,7 @@ int run##version(int32_t k,                                                     
         if (verbose) {                                                                                                  \
             std::cerr << "2.1) Computing intersection" << std::endl;                                                    \
         }                                                                                                               \
-        getIntersection(intersection, fullSets, k, complements);                                                        \
+        getIntersection(intersection, fullSets);                                                                        \
         intersectionSize  = kh_size(intersection);                                                                      \
         if (verbose) {                                                                                                  \
             std::cerr << "   intersection size: " <<  intersectionSize << std::endl;                                    \

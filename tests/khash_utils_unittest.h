@@ -31,17 +31,15 @@ namespace {
     TEST(KHASH_UTILS, Intersection) {
         struct TestCase {
             std::vector<std::vector<kmer_t>> kMerSets;
-            int k;
-            bool complements;
             std::vector<kmer_t> wantResult;
         };
         std::vector<TestCase> tests = {
                 // {{TCC, CTA, ACT, CCT}, {TCC, ACT, CCT}}
-                {{{0b110101, 0b011100, 0b000111, 0b010111}, {0b110101, 0b000111, 0b010111}}, 3, false, {0b110101, 0b000111, 0b010111}},
+                {{{0b110101, 0b011100, 0b000111, 0b010111}, {0b110101, 0b000111, 0b010111}}, {0b110101, 0b000111, 0b010111}},
                 // {{TCC, CTA, ACT, CCT}, {TCC, ACT, CCT}, {TCC, CTA, ACT, TCT}}
-                {{{0b110101, 0b011100, 0b000111, 0b010111}, {0b110101, 0b000111, 0b010111}, {0b110101, 0b011100, 0b000111, 0b110111}}, 3, false, {0b110101, 0b000111}},
+                {{{0b110101, 0b011100, 0b000111, 0b010111}, {0b110101, 0b000111, 0b010111}, {0b110101, 0b011100, 0b000111, 0b110111}}, {0b110101, 0b000111}},
                 // {{CC}, {GG}}
-                {{{0b0101}, {0b0101}}, 2, true, {0b0101}},
+                {{{0b0101}, {0b0101}}, {0b0101}},
         };
 
         for (auto t : tests) {
@@ -53,7 +51,7 @@ namespace {
             }
 
             kh_S64M_t * gotResult = kh_init_S64M();
-            getIntersection(gotResult, input, t.k, t.complements);
+            getIntersection(gotResult, input);
             auto gotResultVec = kMersToVec(gotResult);
             sort(t.wantResult.begin(), t.wantResult.end());
             sort(gotResultVec.begin(), gotResultVec.end());

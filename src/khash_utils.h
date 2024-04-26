@@ -132,7 +132,7 @@ std::vector<kmer64_t> kMersToVec(kh_S64M_t *kMers) {
 
 /// Compute the intersection of several k-mer sets.
 template <typename KHT>
-KHT *getIntersection(KHT* result, std::vector<KHT*> &kMerSets, int k, bool complements) {
+KHT *getIntersection(KHT* result, std::vector<KHT*> &kMerSets) {
     if (kMerSets.size() < 2) return result;
     KHT* smallestSet = kMerSets[0];
     for (size_t i = 1; i < kMerSets.size(); ++i) {
@@ -141,16 +141,16 @@ KHT *getIntersection(KHT* result, std::vector<KHT*> &kMerSets, int k, bool compl
     for (auto i = kh_begin(smallestSet); i != kh_end(smallestSet); ++i) {
         if (!kh_exist(smallestSet, i)) continue;
         auto kMer = kh_key(smallestSet, i);
-        if (!containsKMer(smallestSet, kMer, k, complements)) continue;
+        if (!containsCanonicalKMer(smallestSet, kMer)) continue;
         bool everywhere = true;
         for (size_t i = 0; i < kMerSets.size(); ++i) if (kMerSets[i] != smallestSet) {
-            if (!containsKMer(kMerSets[i], kMer, k, complements)) {
+            if (!containsCanonicalKMer(kMerSets[i], kMer)) {
                 everywhere = false;
                 break;
             }
         }
         if (everywhere) {
-            insertKMer(result, kMer, k, complements, true);
+            insertCanonicalKMer(result, kMer, true);
         }
     }
     return result;
