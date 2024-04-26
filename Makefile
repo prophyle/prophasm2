@@ -1,7 +1,7 @@
 .PHONY: all clean test cpptest verify quick-verify
 
 CXX=         g++
-CXXFLAGS=    -g -Wall -Wno-unused-function -std=c++17 -O2
+CXXFLAGS=    -g -Wall -Wno-unused-function -std=c++17 -O3
 LDFLAGS=     -lz -lpthread
 SRC=         src
 UINT256=     $(SRC)/uint256_t
