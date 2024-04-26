@@ -74,7 +74,7 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
             extendToLeft = false;
         } else {
             // Extend the simplitig to the left.
-            eraseKMer(kMers, first, k, complements);
+            eraseCanonicalKMer(kMers, std::min(first, complement));
             simplitig.push(letters[ext]);
         }
     }
@@ -91,7 +91,7 @@ void NextSimplitig(KHT *kMers, kmer_t begin, std::ostream& of,  int k, bool comp
             extendToRight = false;
         } else {
             // Extend the simplitig to the right.
-            eraseKMer(kMers, last, k, complements);
+            eraseCanonicalKMer(kMers, std::min(last, complement));
             of << letters[ext];
         }
     }

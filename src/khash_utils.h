@@ -55,17 +55,21 @@ inline bool containsKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, b
 }                                                                                                                   \
                                                                                                                     \
 /* Remove the canonical k-mer from the set.*/                                                                       \
-inline void eraseKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                     \
-    if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
+inline void eraseCanonicalKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer) {                                     \
     auto key = kh_get_S##variant(kMers, kMer);                                                                      \
     if (key != kh_end(kMers)) {                                                                                     \
         kh_del_S##variant(kMers, key);                                                                              \
     }                                                                                                               \
 }                                                                                                                   \
                                                                                                                     \
-/* Insert the canonical k-mer into the set. */                                                                      \
-inline void insertKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements, bool force=false) {  \
+/* Remove the canonical form of a k-mer from the set.*/                                                             \
+inline void eraseKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements) {                     \
     if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
+    eraseCanonicalKMer(kMers, kMer);                                                                                \
+}                                                                                                                   \
+                                                                                                                    \
+/* Insert the canonical k-mer into the set. */                                                                      \
+inline void insertCanonicalKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, bool force=false) {                  \
     int ret;                                                                                                        \
     if (MINIMUM_ABUNDANCE == (byte)1) {                                                                             \
         kh_put_S##variant(kMers, kMer, &ret);                                                                       \
@@ -80,6 +84,12 @@ inline void insertKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, boo
         if (force || value == (byte)255) kh_value(kMers, key) = (byte)255;                                          \
         else kh_value(kMers, key) = value + 1;                                                                      \
     }                                                                                                               \
+}                                                                                                                   \
+                                                                                                                    \
+/* Insert the canonical k-mer into the set. */                                                                      \
+inline void insertKMer(kh_S##variant##_t *kMers, kmer##type##_t kMer, int k, bool complements, bool force=false) {  \
+    if (complements) kMer = CanonicalKMer(kMer, k);                                                                 \
+    insertCanonicalKMer(kMers, kMer, force);                                                                        \
 }                                                                                                                   \
                                                                                                                     \
 /* Parallel wrapper for differenceInPlace. */                                                                       \
