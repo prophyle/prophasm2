@@ -10,21 +10,6 @@ typedef uint64_t kmer64_t;
 typedef __uint128_t kmer128_t;
 typedef uint256_t kmer256_t;
 
-/// Convert the given basic nucleotide to int so it can be used for indexing in AC.
-/// If non-existing nucleotide is given, return -1.
-inline int NucleotideToInt (char c) {
-    switch (c) {
-        case 'A': return 0;
-        case 'C': return 1;
-        case 'G': return 2;
-        case 'T': return 3;
-        case 'a': return 0;
-        case 'c': return 1;
-        case 'g': return 2;
-        case 't': return 3;
-        default: return -1;
-    }
-}
 
 /// Compute the prefix of size d of the given k-mer.
 template <typename kmer_t>

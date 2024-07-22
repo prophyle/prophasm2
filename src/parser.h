@@ -8,6 +8,28 @@
 #include "kmers.h"
 #include "khash_utils.h"
 
+// Conversion table for nucleotides to integers.
+// Contains 0 for A and a, 1 for C and c, 2 for G and g, 3 for T and t.
+// Non-nucleotide characters have value >= 4. In particular, white space characters have value 5 and other 4.
+static const int nucleotideToInt[] = {
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 5, 5, 5,  5, 5, 4, 4,
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        5, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 0, 4, 1,  4, 4, 4, 2,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  3, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 0, 4, 1,  4, 4, 4, 2,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  3, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
+        4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4
+};
+
 
 #define INIT_PARSER(type, variant)                                                                        \
 /*  Read encoded k-mers from the given fasta file.                                                        \
@@ -29,26 +51,22 @@ void ReadKMers(kh_S##variant##_t *kMers, std::string &path, int k, bool compleme
             exit(1);                                                                                      \
         }                                                                                                 \
     }                                                                                                     \
-    char c;                                                                                               \
+    unsigned char c;                                                                                      \
     int beforeKMerEnd = k;                                                                                \
     kmer##type##_t currentKMer = 0;                                                                       \
     kmer##type##_t complement = 0;                                                                        \
     /* mask that works even for k=32. */                                                                  \
-    kmer##type##_t mask = (((kmer##type##_t) 1) <<  (2 * k - 1));                                         \
+    int k2Minus1 = 2 * k - 1;                                                                             \
+    int k2Minus2 = 2 * k - 2;                                                                             \
+    kmer##type##_t mask = (((kmer##type##_t) 1) <<  k2Minus1);                                            \
     mask |= mask - 1;                                                                                     \
     bool readingHeader = false;                                                                           \
     while ((*fasta) >> std::noskipws >> c) {                                                              \
-        if (c == '>') {                                                                                   \
-            readingHeader = true;                                                                         \
-            currentKMer = 0;                                                                              \
-            beforeKMerEnd = k;                                                                            \
-        }                                                                                                 \
-        else if (c == '\n') readingHeader = false;                                                        \
-        if (readingHeader) continue;                                                                      \
-        auto data = NucleotideToInt(c);                                                                   \
-        /* Disregard white space. */                                                                      \
-        if (c == '\n' || c == '\r' || c == ' ') continue;                                                 \
-        if (data == -1) {                                                                                 \
+        int data = nucleotideToInt[c];                                                                    \
+        if (data >= 4 || readingHeader) {                                                                 \
+            readingHeader |= (c == '>');                                                                  \
+            readingHeader &= (c != '\n');                                                                 \
+            if (data == 5) continue;                                                                      \
             currentKMer = 0;                                                                              \
             beforeKMerEnd = k;                                                                            \
             continue;                                                                                     \
@@ -57,8 +75,8 @@ void ReadKMers(kh_S##variant##_t *kMers, std::string &path, int k, bool compleme
         currentKMer &= mask;                                                                              \
         currentKMer |= data;                                                                              \
         complement >>= 2;                                                                                 \
-        complement |= ((kmer##type##_t (3)) ^ data) << ((k - 1) << 1);                                    \
-        if(beforeKMerEnd > 0) --beforeKMerEnd;                                                            \
+        complement |= (kmer##type##_t((3) ^ data)) << k2Minus2;                                           \
+        beforeKMerEnd -= (beforeKMerEnd > 0);                                                             \
         if (beforeKMerEnd == 0) {                                                                         \
             kmer##type##_t canonicalKMer = ((!complements) || currentKMer < complement) ?                 \
                     currentKMer : complement;                                                             \

@@ -20,25 +20,6 @@ namespace {
         EXPECT_EQ(0b111111'01111111LL, BitPrefix(0b111111'01111111'11111111'11111111'11111111'11111111'11111111'11111110LL, 31, 7));
     }
 
-    TEST(KMers, NucleotideToInt) {
-        struct TestCase {
-            char nucleotide;
-            int wantResult;
-        };
-        std::vector<TestCase> tests = {
-                {'A', 0},
-                {'C', 1},
-                {'G', 2},
-                {'T', 3},
-                {'B', -1},
-        };
-
-        for (auto t : tests) {
-            int gotResult = NucleotideToInt(t.nucleotide);
-            EXPECT_EQ(t.wantResult, gotResult);
-        }
-    }
-
     TEST(KMers, NucleotideAtIndex) {
         EXPECT_EQ('G', NucleotideAtIndex(0b111001, 3, 1));
         EXPECT_EQ('G', NucleotideAtIndex(0b11100111, 4, 1));
