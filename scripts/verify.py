@@ -102,14 +102,14 @@ def main():
         print("Testing ProphAsm2 outputs valid intersection on files " + args.path + " and " + args.interpath)
         for complements in [True]:
             for m in range(1, 3):
-                for k in range(2, 65, 23 if args.quick else 1):
+                for k in range(2, 129, 23 if args.quick else 1):
                     success &= verify_intersection(args.path, args.interpath, k, complements, m)
                 print("")
 
     print("Testing ProphAsm2 outputs valid simplitigs on file " + args.path)
     for complements in [True, False]:
         for m in range(1, 4):
-            for k in range(2, 65, 11 if args.quick else 1):
+            for k in range(2, 129, 11 if args.quick else 1):
                 success &= verify_instance(args.path, k, complements, m)
             print("")
 
